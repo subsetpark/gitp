@@ -17,7 +17,12 @@ Eat a canteloupe.
 In view; know your right from your left,
 Moderate the body's energies,
 Keep the bitter and the sour in right
-Proportion. After all, you bathe
+Proportion. After 
+
+
+
+3dyun34
+all, you bathe
 You rankle me.
 Understand.
 Regularly. Poorly And the world will unfold
