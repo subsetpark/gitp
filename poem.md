@@ -11,6 +11,8 @@ Swirl at your ankles
 As you *proceed* alongside
 The shore. Keep it only under the blanket
 Nu?
+Hello Tom this my poem
+To you.
 On the outside
 And by the way, run a marathon.
 Eat a canteloupe.
@@ -18,9 +20,6 @@ In view; know your right from your left,
 Moderate the body's energies,
 Keep the bitter and the sour in right
 Proportion. After 
-
-
-
 3dyun34
 all, you bathe
 You rankle me.
