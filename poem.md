@@ -1,7 +1,6 @@
 ﻿What dumb shit. And edit this part too.
 How badly
 Enough of THIS stuff, Charlie
-The way of things, your mistress,
 You happy, poor thinker, you who
 Your elegances;
 And nibbling things of hers
