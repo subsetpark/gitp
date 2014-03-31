@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import subprocess, sublime, sublime_plugin
 
 def lines(s):
@@ -68,3 +66,6 @@ class DisplayHunksCommand(sublime_plugin.TextCommand):
 class HunkListener(sublime_plugin.EventListener):
     def on_post_save(self, view):
         view.run_command("display_hunks")
+
+    def on_window_command(self, window, command, args):
+        window.active_view().run_command('display_hunks')
