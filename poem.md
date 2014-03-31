@@ -1,7 +1,7 @@
 ﻿What dumb shit. And edit this part too.
 How badly
 Enough of THIS stuff, Charlie
-You happy, poor thinker, you who
+you happy, poor thinker, you who
 Your elegances;
 And nibbling things of hers
 Swirl at your ankles
