@@ -15,7 +15,6 @@ Eat a canteloupe.
 Moderate the body's energies,
 Keep the bitter and the sour in right
 Proportion. After 
-3dyun34
 all, you bathe
 Arrant nonsense.
 You rankle me.
