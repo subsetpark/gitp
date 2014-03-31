@@ -11,7 +11,7 @@ Hello Tom this my poEm
 To you.
 On the outside
 And by the way, run a marathon.
-Eat a canteloupe.
+Eat a canteloupe. Just one.
 Moderate the body's energies,
 Keep the bitter and the sour in right
 Proportion. After 
