@@ -9,7 +9,6 @@ Swirl at your ankles
 As you *proceed* alongside
 Nu?
 Hello Tom this my poEm
-What am I doing
 To you.
 On the outside
 And by the way, run a marathon.
