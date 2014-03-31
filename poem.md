@@ -8,14 +8,17 @@ Swirl at your ankles
 As you *proceed* alongside
 Nu?
 Hello Tom this my poEm
-To you.
+To you For 
+.
 On the outside
 And by the way, run a marathon.
 Eat a canteloupe. Just one.
 Moderate the body's energies,
 Keep the bitter and the sour in right
 Proportion. After 
-all, you bathe
+
+
+Ouch.all, you bathe
 Arrant nonsense.
 You rankle me.
 Understand.
