@@ -29,6 +29,7 @@ class EditDiffCommand(sublime_plugin.WindowCommand):
         choices = [0] + [int(char) for char in str.split() if char.isdigit()]
         filename = self.window.active_view().file_name()
         diff = subprocess.check_output(['git', 'diff', filename]).decode('UTF-8')
+        final_line = False
         if diff.splitlines()[-1].startswith('\\'):
             final_line = diff.splitlines()[-1]
         new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
@@ -38,25 +39,31 @@ class EditDiffCommand(sublime_plugin.WindowCommand):
         p = subprocess.Popen(['git', 'apply', '--cached', '--recount', '--allow-overlap'], stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
         p.communicate(input=new_diff)
 
+    def run(self):
+        self.window.show_input_panel('Please enter choices: ', '', self.crunch_diff, None, None)
+        # self.window.run_command('commit_hunks')
+        self.window.active_view().run_command('display_hunks')
+
+class CommitHunks(sublime_plugin.WindowCommand):
     def commit_patch(self, str):
         c_msg = str.encode('utf-8')
         p = subprocess.Popen(['git', 'commit', '--file=-'], stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
-        p.communicate(input=new_diff)
+        p.communicate(input=c_msg)
 
     def run(self):
-        self.window.show_input_panel('Please enter choices: ', '', self.crunch_diff, None, lambda: print('cancel'))
         self.window.show_input_panel('Please enter a commit message: ', '', self.commit_patch, None, None)
-        self.view.run_command('display_hunks')
-        pass
+        self.window.active_view().run_command('display_hunks')
+
 
 class DisplayHunksCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        self.view.erase_regions('mark')
+        self.view.erase_regions('hunks')
         _, hunk_line_nos = load_diff()
-        pts = [sublime.Region(self.view.text_point(l, 0)) for l in hunk_line_nos]
-        self.view.add_regions("hunks", pts, "hunks", "dot", sublime.HIDDEN | sublime.PERSISTENT)
-
-
+        pts = []
+        if hunk_line_nos: 
+            pts = [sublime.Region(self.view.text_point(l, 0)) for l in hunk_line_nos]
+        if pts:
+            self.view.add_regions("hunks", pts, "hunks", "dot", sublime.HIDDEN | sublime.PERSISTENT)
 
 class HunkListener(sublime_plugin.EventListener):
     def on_post_save(self, view):
