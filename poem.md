@@ -3,6 +3,9 @@ How badly
 Enough of THIS stuff nonsense, Charlie
 you happy, poOr thinker, you who
 And nibbling things of hers
+I have added one line
+And another line
+And a third. All in a row.
 Swirl at your ankles
 As you *proceed* alongside
 Nu?
