@@ -1,8 +1,7 @@
 ﻿What dumb shit.iOUc And edit this part too. Run a marathon.
 How badly
-Enough of THIS stuff, Charlie
+Enough of THIS stuff nonsense, Charlie
 you happy, poOr thinker, you who
-Your elegances;
 And nibbling things of hers
 Swirl at your ankles
 As you *proceed* alongside
@@ -12,7 +11,6 @@ To you For
 .
 On the outside
 And by the way, run a marathon.
-Eat a canteloupe. Just one.
 Moderate the body's energies,
 Keep the bitter and the sour in right
 Proportion. After 
@@ -21,5 +19,4 @@ Proportion. After
 Ouch.all, you bathe
 Arrant nonsense.
 You rankle me.
-Understand.
 As she leads me out to sea.

@@ -15,9 +15,12 @@ def chunk(lines):
             chunk.append(line)
     yield chunk
 
-def load_diff(filename):
-    diff_lines =  subprocess.check_output(['git', 'diff', filename],
-                stderr=subprocess.STDOUT).decode('UTF-8').splitlines()
+def load_diff(filename, syntax):
+    if sum((syntax.count(lang) for lang in ('Markdown', 'Plain Text'))):
+        diff_cli = ['git', 'diff', '--unified=1', filename]
+    else:
+        diff_cli = ['git', 'diff', filename]
+    diff_lines =  subprocess.check_output(diff_cli, stderr=subprocess.STDOUT).decode('UTF-8').splitlines()
     hunk_metadata = [line.split()[1] for line in diff_lines if line.startswith('@@')]
     hunk_line_nos = [int(word.split(',')[0].translate({ord(i):None for i in '-+,'})) for word in hunk_metadata]
     return diff_lines, hunk_line_nos
