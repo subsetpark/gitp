@@ -35,11 +35,14 @@ def load_diff(view):
     """
     Analyze a diff file for unidiff content.
     """
-    path = dirname(view)
-    diff_lines = subprocess.check_output(diff_cli(view), stderr=subprocess.STDOUT, cwd=path).decode('UTF-8').splitlines()
-    hunk_metadata = [line.split()[2] for line in diff_lines if line.startswith('@@')]
-    hunk_line_nos = [int(word.split(',')[0].translate({ord(i):None for i in '-+,'})) for word in hunk_metadata]
-    return diff_lines, hunk_line_nos
+    if view.file_name():
+        path = dirname(view)
+        diff_lines = subprocess.check_output(diff_cli(view), stderr=subprocess.STDOUT, cwd=path).decode('UTF-8').splitlines()
+        hunk_metadata = [line.split()[2] for line in diff_lines if line.startswith('@@')]
+        hunk_line_nos = [int(word.split(',')[0].translate({ord(i):None for i in '-+,'})) for word in hunk_metadata]
+        return diff_lines, hunk_line_nos
+    else:
+        return None
 
 class EditDiffCommand(sublime_plugin.WindowCommand):
     def crunch_diff(self, str):
@@ -80,16 +83,16 @@ class CommitHunks(sublime_plugin.WindowCommand):
 class DisplayHunksCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         cur_view = sublime.active_window().active_view()
-
-        self.view.erase_regions('hunks')
-        _, hunk_line_nos = load_diff(cur_view)
-        pts = []
-        modifier = 2
-        if is_prose(cur_view):
-            modifier = 1
-        if hunk_line_nos: 
-            pts = [sublime.Region(cur_view.text_point(l + modifier, 0)) for l in hunk_line_nos]
-            cur_view.add_regions("hunks", pts, "hunks", "bookmark", sublime.DRAW_NO_FILL | sublime.PERSISTENT)
+        if cur_view.file_name():
+            self.view.erase_regions('hunks')
+            _, hunk_line_nos = load_diff(cur_view)
+            pts = []
+            modifier = 2
+            if is_prose(cur_view):
+                modifier = 1
+            if hunk_line_nos: 
+                pts = [sublime.Region(cur_view.text_point(l + modifier, 0)) for l in hunk_line_nos]
+                cur_view.add_regions("hunks", pts, "hunks", "bookmark", sublime.DRAW_NO_FILL | sublime.PERSISTENT)
 
 class HunkListener(sublime_plugin.EventListener):
     def on_post_save(self, view):
