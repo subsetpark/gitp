@@ -1,0 +1,9 @@
+[
+    {
+        "keys": ["ctrl+alt+x"], "command": "edit_diff"
+        },
+        {"keys": ["ctrl+alt+c"], "command": "commit_hunks"
+        },
+        {"keys": ["ctrl+alt+v"], "command": "view_hunks"
+    }
+]

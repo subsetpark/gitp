@@ -15,7 +15,7 @@ DIGITS = ['Packages/gitp/icons/1.png'
          ]
 
 active_hunks = {}
-
+#trivial change
 def dirname(view):
     filename = view.file_name()
     if not filename:
@@ -126,15 +126,15 @@ class CommitHunks(sublime_plugin.WindowCommand):
     def run(self):
         self.window.show_input_panel('Please enter a commit message: ', '', self.commit_patch, None, None)
         # sublime.set_timeout(lambda: cur_view().run_command('display_hunks'), 2000)
-
+# second change
 class DisplayHunksCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        filename = cur_view().file_name()
+        filename = self.view.file_name()
         if filename:
-            path = dirname(cur_view())
-            paint_hunks(cur_view(), 'hunks')
+            path = dirname(self.view)
+            paint_hunks(self.view, 'hunks')
 
-            if is_prose(cur_view()):
+            if is_prose(self.view):
                 stage_cli =  ['git', 'diff', '--cached', '--unified=1', filename]
             else:
                 stage_cli =  ['git', 'diff', '--cached', filename]
@@ -143,9 +143,9 @@ class DisplayHunksCommand(sublime_plugin.TextCommand):
                 stage_diff = stage_diff.decode('UTF-8')
                 _, stage_lines = analyze_diff(stage_diff)
                 print("currently staged for commit: ", stage_lines)
-                paint_hunks(cur_view(), 'staged', hunk_line_nos=stage_lines)
+                paint_hunks(self.view, 'staged', hunk_line_nos=stage_lines)
             else:
-                erase_hunks(cur_view(), 'staged')
+                erase_hunks(self.view, 'staged')
 
 class ViewHunksCommand(sublime_plugin.WindowCommand):
     """
@@ -155,6 +155,10 @@ class ViewHunksCommand(sublime_plugin.WindowCommand):
     def run(self):
         filename = cur_view().file_name()
         path = dirname(cur_view())
+
+        for r in cur_view().sel():
+            pass #I should be able to expand each selection to cover its whole line.
+
         print("active hunks: ",active_hunks)
         for hunk in active_hunks:
             r = cur_view().get_regions(hunk)
@@ -165,8 +169,14 @@ class ViewHunksCommand(sublime_plugin.WindowCommand):
         print("choices: ",choices)
         diff = gen_diff(cur_view())
         new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
-
+        ndw = self.window.new_file()
+        ndw.run_command('new_diff', {'nd': new_diff})
         print(new_diff)
+
+class NewDiffCommand(sublime_plugin.TextCommand):
+    def run(self, edit, nd=None):
+        self.view.set_syntax_file('Packages/Diff/Diff.tmLanguage')
+        self.view.insert(edit, 0, nd)
 
 
 
@@ -176,5 +186,3 @@ class HunkListener(sublime_plugin.EventListener):
 
     def on_activated(self, view):
         view.run_command("display_hunks")
-    # def on_window_command(self, window, command, args):
-        # window.active_view().run_command('display_hunks')
