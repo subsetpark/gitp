@@ -64,16 +64,14 @@ def analyze_diff(diff):
     return diff, hunk_line_nos
 
 def erase_hunks(view, key):
-    if key == "staged":
-        view.erase_regions("staged")
-    elif key == "hunks":
+    if key == "hunks":
         for i in range(len(DIGITS)):
             view.erase_regions('gitp_hunks'+str(i))
-
+    else:
+        view.erase_regions(key)
 
 def paint_hunks(view, key, hunk_line_nos=None):
-    if view.file_name():
-        erase_hunks(view, key)
+    if view.file_name():        erase_hunks(view, key)
         if not hunk_line_nos:
             _, hunk_line_nos = analyze_diff(gen_diff(view))
         pts = []
