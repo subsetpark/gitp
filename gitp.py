@@ -145,7 +145,7 @@ class DisplayHunksCommand(sublime_plugin.TextCommand):
                 print("currently staged for commit: ", stage_lines)
                 paint_hunks(cur_view(), 'staged', hunk_line_nos=stage_lines)
             else:
-                cur_view().erase_regions('staged')
+                erase_hunks(cur_view(), 'staged')
 
 class ViewHunksCommand(sublime_plugin.WindowCommand):
     """
