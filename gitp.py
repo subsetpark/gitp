@@ -114,18 +114,18 @@ class CommitHunks(sublime_plugin.WindowCommand):
         path = dirname(cur_view())
         p = subprocess.Popen(['git', 'commit', '--file=-'], stderr=subprocess.STDOUT, stdin=subprocess.PIPE, cwd=path)
         p.communicate(input=str.encode('utf-8'))
-        cur_view().run_command('display_hunks')
-        
+        erase_hunks(cur_view(), 'staged')
+
     def run(self):
         self.window.show_input_panel('Please enter a commit message: ', '', self.commit_patch, None, None)
         # sublime.set_timeout(lambda: cur_view().run_command('display_hunks'), 2000)
 
 class DisplayHunksCommand(sublime_plugin.TextCommand):
-    def run(self, edit):        filename = cur_view().file_name()
+    def run(self, edit):
+        filename = cur_view().file_name()
         if filename:
             path = dirname(cur_view())
             paint_hunks(cur_view(), 'hunks')
-
             if is_prose(cur_view()):
                 stage_cli =  ['git', 'diff', '--cached', '--unified=1', filename]
             else:
