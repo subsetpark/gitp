@@ -70,8 +70,8 @@ def erase_hunks(view, key):
     if key == "hunks":
         for i in range(len(DIGITS)):
             view.erase_regions('gitp_hunks'+str(i))
-        else:
-            view.erase_regions(key)
+    else:
+        view.erase_regions(key)
 
 def paint_hunks(view, key, hunk_line_nos=None):
     if view.file_name():
