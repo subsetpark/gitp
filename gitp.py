@@ -55,9 +55,17 @@ def analyze_diff(diff):
     hunk_line_nos = [int(word.split(',')[0].translate({ord(i):None for i in '-+,'})) for word in hunk_metadata]
     return diff, hunk_line_nos
 
+def erase_hunks(view, key):
+    if key == "staged":
+        view.erase_regions("staged")
+    elif key == "hunks":
+        for i in range(len(DIGITS)):
+            view.erase_regions('gitp_hunks'+str(i))
+
+
 def paint_hunks(view, key, hunk_line_nos=None):
     if view.file_name():
-        view.erase_regions(key)
+        erase_hunks(view, key)
         if not hunk_line_nos:
             _, hunk_line_nos = analyze_diff(gen_diff(view))
         pts = []
@@ -102,7 +110,7 @@ class CommitHunks(sublime_plugin.WindowCommand):
         c_msg = str.encode('utf-8')
         p = subprocess.Popen(['git', 'commit', '--file=-'], stderr=subprocess.STDOUT, stdin=subprocess.PIPE, cwd=path)
         p.communicate(input=c_msg)
-        cur_view.erase_regions('staged')
+        erase_hunks(cur_view, 'staged')
 
     def run(self):
         self.window.show_input_panel('Please enter a commit message: ', '', self.commit_patch, None, None)
