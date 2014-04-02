@@ -14,9 +14,11 @@ DIGITS = ['Packages/gitp/icons/1.png'
          ,'Packages/gitp/icons/9.png'
          ]
 
+active_hunks = {}
 
 def dirname(view):
-    filename = view.file_name()    if not filename:
+    filename = view.file_name()
+    if not filename:
         return ""
     return filename[:filename.rfind('/')]
 
@@ -26,6 +28,7 @@ def cur_view():
 def lines(s):
     for line in s.split('\n'):
         yield line
+
 def chunk(lines):
     chunk = []
     for line in lines:
@@ -67,11 +70,12 @@ def erase_hunks(view, key):
     if key == "hunks":
         for i in range(len(DIGITS)):
             view.erase_regions('gitp_hunks'+str(i))
-    else:
-        view.erase_regions(key)
+        else:
+            view.erase_regions(key)
 
 def paint_hunks(view, key, hunk_line_nos=None):
-    if view.file_name():        erase_hunks(view, key)
+    if view.file_name():
+        erase_hunks(view, key)
         if not hunk_line_nos:
             _, hunk_line_nos = analyze_diff(gen_diff(view))
         pts = []
@@ -79,13 +83,16 @@ def paint_hunks(view, key, hunk_line_nos=None):
         if hunk_line_nos: 
             pts = [sublime.Region(view.text_point(l + modifier, 0)) for l in hunk_line_nos]
             if key == "hunks":
+                # active_hunks = []
                 for i, pt in enumerate(pts):
                     keyname = 'gitp_hunks'+str(i)
                     digit = DIGITS[i] if i < len(DIGITS) else 'bookmark'
                     view.add_regions(keyname, [pt], keyname, digit, sublime.DRAW_NO_FILL | sublime.PERSISTENT)
+                    active_hunks[keyname] = view.get_regions(keyname)[0]
             else:
                 print("adding regions with key", key)
                 view.add_regions(key, pts, key, ICONS[key], sublime.HIDDEN | sublime.PERSISTENT)
+            print("active hunks: ",active_hunks)         
 
 class EditDiffCommand(sublime_plugin.WindowCommand):
     def crunch_diff(self, str):
@@ -103,7 +110,7 @@ class EditDiffCommand(sublime_plugin.WindowCommand):
         new_diff = (new_diff.rstrip(' ') + "\n") if not new_diff.endswith("\n") else new_diff.rstrip(' ')
         print("new diff: ", new_diff.encode('UTF-8'))
         p = subprocess.Popen(['git', 'apply', '--cached', '--recount', '--allow-overlap'], cwd=path, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-        print(p.communicate(input=new_diff.encode('UTF-8')))
+        print("git staging response: ",p.communicate(input=new_diff.encode('UTF-8')))
         cur_view().run_command('display_hunks')
             
     def run(self):
@@ -126,19 +133,44 @@ class DisplayHunksCommand(sublime_plugin.TextCommand):
         if filename:
             path = dirname(cur_view())
             paint_hunks(cur_view(), 'hunks')
+
             if is_prose(cur_view()):
                 stage_cli =  ['git', 'diff', '--cached', '--unified=1', filename]
             else:
-                stage_cli =  ['git', 'diff', '--cached', filename]            stage_diff = subprocess.check_output(stage_cli, cwd=path, stderr=subprocess.PIPE)
+                stage_cli =  ['git', 'diff', '--cached', filename]
+            stage_diff = subprocess.check_output(stage_cli, cwd=path, stderr=subprocess.PIPE)
             if stage_diff:
                 stage_diff = stage_diff.decode('UTF-8')
                 _, stage_lines = analyze_diff(stage_diff)
-                print(stage_lines)
-                paint_hunks(cur_view, 'staged', hunk_line_nos=stage_lines)
+                print("currently staged for commit: ", stage_lines)
+                paint_hunks(cur_view(), 'staged', hunk_line_nos=stage_lines)
+
+class ViewHunksCommand(sublime_plugin.WindowCommand):
+    """
+    When a line with a hunk icon is selected and this command is run, it will open a window
+    With that hunk displayed.
+    """
+    def run(self):
+        filename = cur_view().file_name()
+        path = dirname(cur_view())
+        print("active hunks: ",active_hunks)
+        for hunk in active_hunks:
+            r = cur_view().get_regions(hunk)
+
+        hunks_to_view = [hunk for hunk in active_hunks if cur_view().sel().contains(active_hunks[hunk])]
+        print("hunks to view: ", hunks_to_view)
+        choices = [int("".join(char for char in name if char.isdigit())) + 1 for name in hunks_to_view]
+        print("choices: ",choices)
+        diff = gen_diff(cur_view())
+        new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
+
+        print(new_diff)
+
+
 
 class HunkListener(sublime_plugin.EventListener):
     def on_post_save(self, view):
         view.run_command("display_hunks")
 
-    def on_window_command(self, window, command, args):
-        window.active_view().run_command('display_hunks')
+    # def on_window_command(self, window, command, args):
+        # window.active_view().run_command('display_hunks')
