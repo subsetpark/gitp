@@ -1,25 +1,20 @@
-﻿What dumb shit.iOUc And edit this part too. Run a marathon.
-How badly
-Enough of THIS stuff nonsense, Charlie
-you happy, poOr thinker, you who
-And nibbling things of hers
-I have added one line
-And another I add this in the middle. line
-And a third. All in a row.
-Swirl at your ankles
-As you *proceed* alongside
-Nu?
-Hello Tom this my poEm
-To you For 
-.
-On the outside
-And by the way, run a marathon.
-Moderate the body's energies,
-Keep the bitter and the sour in right
-Proportion. After 
-
-
-Ouch.all, you bathe
-Arrant nonsense.
-You rankle me.
-As she leads me out to sea.
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
