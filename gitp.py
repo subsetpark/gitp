@@ -94,13 +94,13 @@ def expand_sel(view):
         view.sel().add(sublime.Region(view.text_point(l, 0), view.text_point(l, c)))
 
 def stage_hunks(view, choices):
-    choices = [0] + choices 
+    h_to_stage = [0] + choices 
     filename = view.file_name()
 
     diff, hunk_line_nos = analyze_diff(gen_diff(view))
     final_line = diff.splitlines()[-1] if diff.splitlines()[-1].startswith('\\') else False
 
-    new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
+    new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in h_to_stage)
     if final_line and new_diff.splitlines()[-1] != final_line:
         new_diff += ("\n" + final_line)
     new_diff = (new_diff.rstrip(' '))
