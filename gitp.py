@@ -84,9 +84,7 @@ def paint_hunks(view, key, hunk_line_nos=None):
                 view.add_regions(keyname, [pt], keyname, digit, sublime.DRAW_NO_FILL | sublime.PERSISTENT)
                 active_hunks[keyname] = view.get_regions(keyname)[0]
         else:
-            print("adding regions with key", key)
             view.add_regions(key, pts, key, ICONS[key], sublime.HIDDEN | sublime.PERSISTENT)
-        print("active hunks: ",active_hunks)         
 
 class EditDiffCommand(sublime_plugin.TextCommand):
     def crunch_diff(self, str):
@@ -104,10 +102,9 @@ class EditDiffCommand(sublime_plugin.TextCommand):
         new_diff = (new_diff.rstrip(' '))
         if not new_diff.endswith("\n"):
             new_diff += "\n"
-        print("new diff: ", new_diff.encode('UTF-8'))
         
         p = subprocess.Popen(['git', 'apply', '--cached', '--recount', '--allow-overlap'], cwd=dirname(self.view), stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-        print("git staging response: ",p.communicate(input=new_diff.encode('UTF-8')))
+        print("git staging response: ", p.communicate(input=new_diff.encode('UTF-8')))
         self.view.run_command('display_hunks')
             
     def run(self, edit):
@@ -116,7 +113,7 @@ class EditDiffCommand(sublime_plugin.TextCommand):
 class CommitHunks(sublime_plugin.TextCommand):
     def commit_patch(self, str):
         p = subprocess.Popen(['git', 'commit', '--file=-'], stderr=subprocess.STDOUT, stdin=subprocess.PIPE, cwd=dirname(self.view))
-        p.communicate(input=str.encode('utf-8'))
+        print("git commit response: ", p.communicate(input=str.encode('utf-8')))
         erase_hunks(self.view, 'staged')
 
     def run(self, edit):
@@ -136,7 +133,6 @@ class DisplayHunksCommand(sublime_plugin.TextCommand):
             if stage_diff:
                 stage_diff = stage_diff.decode('UTF-8')
                 _, stage_lines = analyze_diff(stage_diff)
-                print("currently staged for commit: ", stage_lines)
                 paint_hunks(self.view, 'staged', hunk_line_nos=stage_lines)
             else:
                 erase_hunks(self.view, 'staged')
