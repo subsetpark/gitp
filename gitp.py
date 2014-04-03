@@ -87,26 +87,34 @@ def paint_hunks(view, key, hunk_line_nos=None):
         else:
             view.add_regions(key, pts, key, ICONS[key], sublime.HIDDEN | sublime.PERSISTENT)
 
+def expand_sel(view):
+    for r in view.sel():
+        # adjust selections back to beginning of line
+        l, c = view.rowcol(r.begin())
+        view.sel().add(sublime.Region(view.text_point(l, 0), view.text_point(l, c)))
+
+def stage_hunks(view, choices):
+    choices = [0] + choices 
+    filename = view.file_name()
+
+    diff, hunk_line_nos = analyze_diff(gen_diff(view))
+    final_line = diff.splitlines()[-1] if diff.splitlines()[-1].startswith('\\') else False
+
+    new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
+    if final_line and new_diff.splitlines()[-1] != final_line:
+        new_diff += ("\n" + final_line)
+    new_diff = (new_diff.rstrip(' '))
+    if not new_diff.endswith("\n"):
+        new_diff += "\n"
+    
+    p = subprocess.Popen(['git', 'apply', '--cached', '--recount', '--allow-overlap'], cwd=dirname(view), stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    print("git staging response: ", p.communicate(input=new_diff.encode('UTF-8')))
+    view.run_command('display_hunks')
+
 class EditDiffCommand(sublime_plugin.TextCommand):
     def crunch_diff(self, str):
-        chosen_hunks = [int(char) for char in str if char.isdigit()]
-        # Always include diff metadata
-        choices = [0] + chosen_hunks
-        filename = self.view.file_name()
-
-        diff, hunk_line_nos = analyze_diff(gen_diff(self.view))
-        final_line = diff.splitlines()[-1] if diff.splitlines()[-1].startswith('\\') else False
-
-        new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
-        if final_line and new_diff.splitlines()[-1] != final_line:
-            new_diff += ("\n" + final_line)
-        new_diff = (new_diff.rstrip(' '))
-        if not new_diff.endswith("\n"):
-            new_diff += "\n"
-        
-        p = subprocess.Popen(['git', 'apply', '--cached', '--recount', '--allow-overlap'], cwd=dirname(self.view), stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-        print("git staging response: ", p.communicate(input=new_diff.encode('UTF-8')))
-        self.view.run_command('display_hunks')
+        choices = [int(char) for char in str if char.isdigit()]
+        stage_hunks(self.view, choices)
             
     def run(self, edit):
         self.view.window().show_input_panel('Please enter choices: ', '', self.crunch_diff, None, None)
@@ -144,12 +152,7 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
     With that hunk displayed.
     """
     def run(self, edit):
-        # active_hunks falls out some times. If I feel lazy I can just run display_hunks right here to get it back
-        for r in self.view.sel():
-            # adjust selections back to beginning of line
-            l, c = self.view.rowcol(r.begin())
-            self.view.sel().add(sublime.Region(self.view.text_point(l, 0), self.view.text_point(l, c)))
-
+        expand_sel(self.view)
         hunks_to_view = [hunk for hunk, region in active_hunks.items() if self.view.sel().contains(region)]
         choices = [int("".join(char for char in name if char.isdigit())) + 1 for name in hunks_to_view]
         if choices:
@@ -159,6 +162,17 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
             ndw.set_scratch(True)
             ndw.set_name('*gitp Hunk View: {}*'.format(self.view.file_name().split("/")[-1]))
             ndw.run_command('new_diff', {'nd': new_diff})
+
+class StageTheseHunksCommand(sublime_plugin.TextCommand):
+    """
+    Stages currently selected hunks
+    """
+    def run(self, edit):
+        expand_sel(self.view)
+        hunks_to_view = [hunk for hunk, region in active_hunks.items() if self.view.sel().contains(region)]
+        choices = [int("".join(char for char in name if char.isdigit())) + 1 for name in hunks_to_view]
+        if choices:
+            stage_hunks(self.view, choices)
 
 class NewDiffCommand(sublime_plugin.TextCommand):
     def run(self, edit, nd=None):
