@@ -104,7 +104,6 @@ def paint_hunks(view, key, hunk_line_nos=None):
 
 def expand_sel(view):
     for r in view.sel():
-        # adjust selections back to beginning of line
         l, c = view.rowcol(r.begin())
         view.sel().add(sublime.Region(view.text_point(l, 0), 
                                       view.text_point(l, c)))
