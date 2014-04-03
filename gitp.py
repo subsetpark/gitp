@@ -22,9 +22,6 @@ def dirname(view):
         return ""
     return filename[:filename.rfind('/')]
 
-def cur_view():
-    return sublime.active_window().active_view()
-
 def lines(s):
     for line in s.split('\n'):
         yield line
@@ -52,7 +49,7 @@ def diff_cli(view):
 
 def gen_diff(view):
     if view.file_name():
-        return subprocess.check_output(diff_cli(view), stderr=subprocess.STDOUT, cwd=dirname(cur_view())).decode('UTF-8')
+        return subprocess.check_output(diff_cli(view), stderr=subprocess.STDOUT, cwd=dirname(view)).decode('UTF-8')
     else:
         return None
 
@@ -91,14 +88,14 @@ def paint_hunks(view, key, hunk_line_nos=None):
             view.add_regions(key, pts, key, ICONS[key], sublime.HIDDEN | sublime.PERSISTENT)
         print("active hunks: ",active_hunks)         
 
-class EditDiffCommand(sublime_plugin.WindowCommand):
+class EditDiffCommand(sublime_plugin.TextCommand):
     def crunch_diff(self, str):
         chosen_hunks = [int(char) for char in str if char.isdigit()]
         # Always include diff metadata
         choices = [0] + chosen_hunks
-        filename = cur_view().file_name()
+        filename = self.view.file_name()
 
-        diff, hunk_line_nos = analyze_diff(gen_diff(cur_view()))
+        diff, hunk_line_nos = analyze_diff(gen_diff(self.view))
         final_line = diff.splitlines()[-1] if diff.splitlines()[-1].startswith('\\') else False
 
         new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
@@ -109,16 +106,16 @@ class EditDiffCommand(sublime_plugin.WindowCommand):
             new_diff += "\n"
         print("new diff: ", new_diff.encode('UTF-8'))
         
-        p = subprocess.Popen(['git', 'apply', '--cached', '--recount', '--allow-overlap'], cwd=dirname(cur_view()), stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        p = subprocess.Popen(['git', 'apply', '--cached', '--recount', '--allow-overlap'], cwd=dirname(self.view), stderr=subprocess.PIPE, stdin=subprocess.PIPE)
         print("git staging response: ",p.communicate(input=new_diff.encode('UTF-8')))
-        cur_view().run_command('display_hunks')
+        self.view.run_command('display_hunks')
             
-    def run(self):
-        sublime.active_window().show_input_panel('Please enter choices: ', '', self.crunch_diff, None, None)
+    def run(self, edit):
+        self.view.window().show_input_panel('Please enter choices: ', '', self.crunch_diff, None, None)
 
 class CommitHunks(sublime_plugin.TextCommand):
     def commit_patch(self, str):
-        p = subprocess.Popen(['git', 'commit', '--file=-'], stderr=subprocess.STDOUT, stdin=subprocess.PIPE, cwd=dirname(cur_view()))
+        p = subprocess.Popen(['git', 'commit', '--file=-'], stderr=subprocess.STDOUT, stdin=subprocess.PIPE, cwd=dirname(self.view))
         p.communicate(input=str.encode('utf-8'))
         erase_hunks(self.view, 'staged')
 
