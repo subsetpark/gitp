@@ -116,14 +116,14 @@ class EditDiffCommand(sublime_plugin.WindowCommand):
     def run(self):
         sublime.active_window().show_input_panel('Please enter choices: ', '', self.crunch_diff, None, None)
 
-class CommitHunks(sublime_plugin.WindowCommand):
+class CommitHunks(sublime_plugin.TextCommand):
     def commit_patch(self, str):
         p = subprocess.Popen(['git', 'commit', '--file=-'], stderr=subprocess.STDOUT, stdin=subprocess.PIPE, cwd=dirname(cur_view()))
         p.communicate(input=str.encode('utf-8'))
-        erase_hunks(cur_view(), 'staged')
+        erase_hunks(self.view, 'staged')
 
-    def run(self):
-        self.window.show_input_panel('Please enter a commit message: ', '', self.commit_patch, None, None)
+    def run(self, edit):
+        self.view.window().show_input_panel('Please enter a commit message: ', '', self.commit_patch, None, None)
 
 class DisplayHunksCommand(sublime_plugin.TextCommand):
     def run(self, edit):
