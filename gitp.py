@@ -160,13 +160,14 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
             new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
             ndw = self.view.window().new_file()
             ndw.set_scratch(True)
-            ndw.set_name('*gitp Hunk View*')
+            ndw.set_name('*gitp Hunk View: {}*'.format(self.view.file_name().split("/")[-1]))
             ndw.run_command('new_diff', {'nd': new_diff})
 
 class NewDiffCommand(sublime_plugin.TextCommand):
     def run(self, edit, nd=None):
         self.view.set_syntax_file('Packages/Diff/Diff.tmLanguage')
         self.view.insert(edit, 0, nd)
+        self.view.set_read_only(True)
 
 class HunkListener(sublime_plugin.EventListener):
     def on_post_save(self, view):
