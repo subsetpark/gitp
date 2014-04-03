@@ -42,7 +42,7 @@ def chunk(lines):
 
 def is_prose(view):
     return any(view.settings().get('syntax').count(lang) for lang in ('Markdown', 'Plain Text'))
-
+    
 def diff_cli(view):
     filename = view.file_name()
     if is_prose(view):
@@ -156,16 +156,8 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
             l, c = self.view.rowcol(r.begin())
             self.view.sel().add(sublime.Region(self.view.text_point(l, 0), self.view.text_point(l, c)))
 
-        for hunk in active_hunks:
-            r = self.view.get_regions(hunk)
-
         hunks_to_view = [hunk for hunk, region in active_hunks.items() if self.view.sel().contains(region)]
-        for hunk, region in active_hunks.items():
-            print("hunk: ", hunk)
-            print("region: ", region)
-        print("hunks to view: ", hunks_to_view)
         choices = [int("".join(char for char in name if char.isdigit())) + 1 for name in hunks_to_view]
-        print("choices: ",choices)
         diff = gen_diff(self.view)
         new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
         ndw = self.view.window().new_file()
