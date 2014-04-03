@@ -155,10 +155,13 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
 
         hunks_to_view = [hunk for hunk, region in active_hunks.items() if self.view.sel().contains(region)]
         choices = [int("".join(char for char in name if char.isdigit())) + 1 for name in hunks_to_view]
-        diff = gen_diff(self.view)
-        new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
-        ndw = self.view.window().new_file()
-        ndw.run_command('new_diff', {'nd': new_diff})
+        if choices:
+            diff = gen_diff(self.view)
+            new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
+            ndw = self.view.window().new_file()
+            ndw.set_scratch(True)
+            ndw.set_name('*gitp Hunk View*')
+            ndw.run_command('new_diff', {'nd': new_diff})
 
 class NewDiffCommand(sublime_plugin.TextCommand):
     def run(self, edit, nd=None):
