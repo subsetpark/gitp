@@ -41,7 +41,7 @@ def chunk(lines):
     yield chunk
 
 def is_prose(view):
-    return bool(sum((view.settings().get('syntax').count(lang) for lang in ('Markdown', 'Plain Text'))))
+    return any(view.settings().get('syntax').count(lang) for lang in ('Markdown', 'Plain Text'))
 
 def diff_cli(view):
     filename = view.file_name()
