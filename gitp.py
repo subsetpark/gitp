@@ -78,6 +78,7 @@ def paint_hunks(view, key, hunk_line_nos=None):
     if hunk_line_nos: 
         pts = [sublime.Region(view.text_point(l + modifier, 0)) for l in hunk_line_nos]
         if key is "hunks":
+            # We treat these specially in order to get custom icons.
             for i, pt in enumerate(pts):
                 keyname = 'gitp_hunks'+str(i)
                 digit = DIGITS[i] if i < len(DIGITS) else 'bookmark'
