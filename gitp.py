@@ -93,9 +93,9 @@ def paint_hunks(view, key, hunk_line_nos=None):
 
 class EditDiffCommand(sublime_plugin.WindowCommand):
     def crunch_diff(self, str):
-        active_hunks = [int(char) for char in str if char.isdigit()]
+        chosen_hunks = [int(char) for char in str if char.isdigit()]
         # Always include diff metadata
-        choices = [0] + active_hunks
+        choices = [0] + chosen_hunks
         filename = cur_view().file_name()
 
         diff, hunk_line_nos = analyze_diff(gen_diff(cur_view()))
