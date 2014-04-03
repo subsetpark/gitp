@@ -52,8 +52,7 @@ def diff_cli(view):
 
 def gen_diff(view):
     if view.file_name():
-        path = dirname(view)
-        return subprocess.check_output(diff_cli(view), stderr=subprocess.STDOUT, cwd=path).decode('UTF-8')
+        return subprocess.check_output(diff_cli(view), stderr=subprocess.STDOUT, cwd=dirname(cur_view())).decode('UTF-8')
     else:
         return None
 
@@ -95,19 +94,22 @@ def paint_hunks(view, key, hunk_line_nos=None):
 class EditDiffCommand(sublime_plugin.WindowCommand):
     def crunch_diff(self, str):
         active_hunks = [int(char) for char in str if char.isdigit()]
+        # Always include diff metadata
         choices = [0] + active_hunks
         filename = cur_view().file_name()
-        path = dirname(cur_view())
 
         diff, hunk_line_nos = analyze_diff(gen_diff(cur_view()))
         final_line = diff.splitlines()[-1] if diff.splitlines()[-1].startswith('\\') else False
-        
+
         new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
         if final_line and new_diff.splitlines()[-1] != final_line:
             new_diff += ("\n" + final_line)
-        new_diff = (new_diff.rstrip(' ') + "\n") if not new_diff.endswith("\n") else new_diff.rstrip(' ')
+        new_diff = (new_diff.rstrip(' '))
+        if not new_diff.endswith("\n"):
+            new_diff += "\n"
         print("new diff: ", new_diff.encode('UTF-8'))
-        p = subprocess.Popen(['git', 'apply', '--cached', '--recount', '--allow-overlap'], cwd=path, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        
+        p = subprocess.Popen(['git', 'apply', '--cached', '--recount', '--allow-overlap'], cwd=dirname(cur_view()), stderr=subprocess.PIPE, stdin=subprocess.PIPE)
         print("git staging response: ",p.communicate(input=new_diff.encode('UTF-8')))
         cur_view().run_command('display_hunks')
             
@@ -116,27 +118,24 @@ class EditDiffCommand(sublime_plugin.WindowCommand):
 
 class CommitHunks(sublime_plugin.WindowCommand):
     def commit_patch(self, str):
-        path = dirname(cur_view())
-        p = subprocess.Popen(['git', 'commit', '--file=-'], stderr=subprocess.STDOUT, stdin=subprocess.PIPE, cwd=path)
+        p = subprocess.Popen(['git', 'commit', '--file=-'], stderr=subprocess.STDOUT, stdin=subprocess.PIPE, cwd=dirname(cur_view()))
         p.communicate(input=str.encode('utf-8'))
         erase_hunks(cur_view(), 'staged')
 
     def run(self):
         self.window.show_input_panel('Please enter a commit message: ', '', self.commit_patch, None, None)
-        # sublime.set_timeout(lambda: cur_view().run_command('display_hunks'), 2000)
-# second change
+
 class DisplayHunksCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         filename = self.view.file_name()
         if filename:
-            path = dirname(self.view)
             paint_hunks(self.view, 'hunks')
 
             if is_prose(self.view):
                 stage_cli =  ['git', 'diff', '--cached', '--unified=1', filename]
             else:
                 stage_cli =  ['git', 'diff', '--cached', filename]
-            stage_diff = subprocess.check_output(stage_cli, cwd=path, stderr=subprocess.PIPE)
+            stage_diff = subprocess.check_output(stage_cli, cwd=dirname(self.view), stderr=subprocess.PIPE)
             if stage_diff:
                 stage_diff = stage_diff.decode('UTF-8')
                 _, stage_lines = analyze_diff(stage_diff)
@@ -151,9 +150,7 @@ class ViewHunksCommand(sublime_plugin.WindowCommand):
     With that hunk displayed.
     """
     def run(self):
-        filename = cur_view().file_name()
-        path = dirname(cur_view())
-
+        # active_hunks falls out some times. If I feel lazy I can just run display_hunks right here to get it back
         for r in cur_view().sel():
             pass #I should be able to expand each selection to cover its whole line.
 
@@ -161,9 +158,9 @@ class ViewHunksCommand(sublime_plugin.WindowCommand):
         for hunk in active_hunks:
             r = cur_view().get_regions(hunk)
 
-        hunks_to_view = [hunk for hunk in active_hunks if cur_view().sel().contains(active_hunks[hunk])]
+        hunks_to_view = (hunk for hunk, region in active_hunks if cur_view().sel().contains(region))
         print("hunks to view: ", hunks_to_view)
-        choices = [int("".join(char for char in name if char.isdigit())) + 1 for name in hunks_to_view]
+        choices = (int("".join(char for char in name if char.isdigit())) + 1 for name in hunks_to_view)
         print("choices: ",choices)
         diff = gen_diff(cur_view())
         new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
@@ -175,8 +172,6 @@ class NewDiffCommand(sublime_plugin.TextCommand):
     def run(self, edit, nd=None):
         self.view.set_syntax_file('Packages/Diff/Diff.tmLanguage')
         self.view.insert(edit, 0, nd)
-
-
 
 class HunkListener(sublime_plugin.EventListener):
     def on_post_save(self, view):
