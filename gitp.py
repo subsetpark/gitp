@@ -144,29 +144,32 @@ class DisplayHunksCommand(sublime_plugin.TextCommand):
             else:
                 erase_hunks(self.view, 'staged')
 
-class ViewHunksCommand(sublime_plugin.WindowCommand):
+class ViewHunksCommand(sublime_plugin.TextCommand):
     """
     When a line with a hunk icon is selected and this command is run, it will open a window
     With that hunk displayed.
     """
-    def run(self):
+    def run(self, edit):
         # active_hunks falls out some times. If I feel lazy I can just run display_hunks right here to get it back
-        for r in cur_view().sel():
-            pass #I should be able to expand each selection to cover its whole line.
+        for r in self.view.sel():
+            # adjust selections back to beginning of line
+            l, c = self.view.rowcol(r.begin())
+            self.view.sel().add(sublime.Region(self.view.text_point(l, 0), self.view.text_point(l, c)))
 
-        print("active hunks: ",active_hunks)
         for hunk in active_hunks:
-            r = cur_view().get_regions(hunk)
+            r = self.view.get_regions(hunk)
 
-        hunks_to_view = (hunk for hunk, region in active_hunks if cur_view().sel().contains(region))
+        hunks_to_view = [hunk for hunk, region in active_hunks.items() if self.view.sel().contains(region)]
+        for hunk, region in active_hunks.items():
+            print("hunk: ", hunk)
+            print("region: ", region)
         print("hunks to view: ", hunks_to_view)
-        choices = (int("".join(char for char in name if char.isdigit())) + 1 for name in hunks_to_view)
+        choices = [int("".join(char for char in name if char.isdigit())) + 1 for name in hunks_to_view]
         print("choices: ",choices)
-        diff = gen_diff(cur_view())
+        diff = gen_diff(self.view)
         new_diff = "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) if i in choices)
-        ndw = self.window.new_file()
+        ndw = self.view.window().new_file()
         ndw.run_command('new_diff', {'nd': new_diff})
-        print(new_diff)
 
 class NewDiffCommand(sublime_plugin.TextCommand):
     def run(self, edit, nd=None):
