@@ -71,11 +71,12 @@ def analyze_diff(diff):
 
 def erase_hunks(view, key):
     if key == "hunks":
-        for i in range(len(DIGITS)):
-            view.erase_regions('gitp_hunks'+ str(i))
-    else:
-        view.erase_regions(key)
-# stage this
+        for k in active_hunks.keys():
+            view.erase_regions(k)
+    elif key == "staged":
+        for k in staged_hunks.keys():
+            view.erase_regions(k)     
+
 def paint_hunks(view, key, hunk_line_nos=None):
     erase_hunks(view, key)
     if not hunk_line_nos:
@@ -85,26 +86,26 @@ def paint_hunks(view, key, hunk_line_nos=None):
     if hunk_line_nos: 
         pts = [sublime.Region(view.text_point(l + modifier, 0)) 
                for l in hunk_line_nos]
-        if key is "hunks":
+        if key is "hunks" and pts:
             # We treat these specially in order to get custom icons.
             for i, pt in enumerate(pts):
                 keyname = 'gitp_hunks'+str(i)
                 digit = DIGITS[i] if i < len(DIGITS) else 'bookmark'
                 view.add_regions(keyname, 
                                  [pt], 
-                                 keyname, 
+                                 "gitp", 
                                  digit, 
                                  sublime.DRAW_NO_FILL | sublime.PERSISTENT)
                 active_hunks[keyname] = view.get_regions(keyname)[0]
         elif key == "staged" and pts:
-            view.add_regions(key,
-                             pts, 
-                             key, 
-                             ICONS[key], 
-                             sublime.HIDDEN | sublime.PERSISTENT)
-            for i, r in enumerate(view.get_regions(key)):
-                staged_hunks["staged_" + str(i)] = r
-                print("staged hunks: ", staged_hunks)
+            for i, pt in enumerate(pts):
+                keyname = 'staged_hunks'+str(i)
+                view.add_regions(keyname,
+                                 pts, 
+                                 "gitp", 
+                                 ICONS[key], 
+                                 sublime.HIDDEN | sublime.PERSISTENT)
+                staged_hunks[keyname] = view.get_regions(keyname)[0]
 
 def expand_sel(view):
     for r in view.sel():
@@ -227,7 +228,11 @@ class UnstageTheseHunks(sublime_plugin.TextCommand):
     The opposite of above.
     """
     def run(self, edit):
-        pass
+        expand_sel(self.view)
+        hunks_to_unstage = [hunk 
+                        for hunk, region in staged_hunks.items() 
+                        if self.view.sel().contains(region)]
+        print(hunks_to_unstage)
 
 class NewDiffCommand(sublime_plugin.TextCommand):
     def run(self, edit, nd=None):
