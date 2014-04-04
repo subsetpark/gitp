@@ -116,7 +116,7 @@ def paint_hunks(view, key, hunk_line_nos=None):
             for i, pt in enumerate(pts):
                 keyname = 'staged_hunks'+str(i)
                 view.add_regions(keyname,
-                                 pts, 
+                                 [pt], 
                                  "gitp", 
                                  ICONS[key], 
                                  sublime.HIDDEN | sublime.PERSISTENT)
