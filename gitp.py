@@ -133,6 +133,10 @@ def get_hunk_ints(regions):
                        for char in name 
                        if char.isdigit())) + 1 for name in regions]    
 
+def select_diff_portions(diff, choices):
+  return "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff))) 
+                                   if i in choices)
+
 def stage_hunks(view, choices):
     h_to_stage = [0] + choices 
     filename = view.file_name()
@@ -141,9 +145,7 @@ def stage_hunks(view, choices):
     last_line = diff.splitlines()[-1]
     final_line = last_line if last_line.startswith('\\') else False
 
-    new_diff = "\n".join("\n".join(hunk) 
-                         for i, hunk in enumerate(chunk(lines(diff))) 
-                         if i in h_to_stage)
+    new_diff = select_diff_portions(diff, h_to_stage)
     if final_line and new_diff.splitlines()[-1] != final_line:
         new_diff += ("\n" + final_line)
     new_diff = (new_diff.rstrip(' '))
