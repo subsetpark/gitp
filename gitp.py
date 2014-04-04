@@ -113,6 +113,11 @@ def expand_sel(view):
         view.sel().add(sublime.Region(view.text_point(l, 0), 
                                       view.text_point(l, c)))
 
+def get_hunk_ints(regions):
+    return [int("".join(char 
+                       for char in name 
+                       if char.isdigit())) + 1 for name in regions]    
+
 def stage_hunks(view, choices):
     h_to_stage = [0] + choices 
     filename = view.file_name()
@@ -193,9 +198,8 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
         hunks_to_view = [hunk 
                         for hunk, region in active_hunks.items() 
                         if self.view.sel().contains(region)]
-        choices = [int("".join(char 
-                       for char in name 
-                       if char.isdigit())) + 1 for name in hunks_to_view]
+        choices = get_hunk_ints(hunks_to_view)
+
         if choices:
             diff = gen_diff(self.view)
             new_diff = "\n".join("\n".join(hunk) 
@@ -213,13 +217,10 @@ class StageTheseHunksCommand(sublime_plugin.TextCommand):
     """
     def run(self, edit):
         expand_sel(self.view)
-        hunks_to_view = [hunk
+        hunks_to_stage = [hunk
                         for hunk, region in active_hunks.items() 
                         if self.view.sel().contains(region)]
-        choices = [int("".join(char 
-                       for char in name 
-                       if char.isdigit())) + 1 
-                       for name in hunks_to_view]
+        choices = get_hunk_ints(hunks_to_stage)
         if choices:
             stage_hunks(self.view, choices)
 
