@@ -90,12 +90,14 @@ def erase_hunks(view, key):
             view.erase_regions(k)
     elif key == "staged":
         for k in staged_hunks.keys():
-            view.erase_regions(k)     
+            view.erase_regions(k)
 
-def paint_hunks(view, key, hunk_line_nos=None):
+def paint_hunks(view, key):
     erase_hunks(view, key)
-    if not hunk_line_nos:
+    if key == "hunks":
         _, hunk_line_nos = analyze_diff(gen_diff(view))
+    elif key == "staged":
+        _, hunk_line_nos = analyze_diff(gen_staged(view))
     pts = []
     modifier = 1 if is_prose(view) else 2
     if hunk_line_nos: 
@@ -186,25 +188,12 @@ class CommitHunks(sublime_plugin.TextCommand):
 class DisplayHunksCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         filename = self.view.file_name()
+        print(active_hunks)
+        print(staged_hunks)
         if filename:
             paint_hunks(self.view, 'hunks')
-
-            if is_prose(self.view):
-                stage_cli =  ['git', 'diff', '--cached', '--unified=1', 
-                              filename]
-            else:
-                stage_cli =  ['git', 'diff', '--cached', 
-                              filename]
-            stage_diff = subprocess.check_output(stage_cli, 
-                                                 cwd=dirname(self.view), 
-                                                 stderr=subprocess.PIPE)
-            if stage_diff:
-                stage_diff = stage_diff.decode('UTF-8')
-                _, stage_lines = analyze_diff(stage_diff)
-                paint_hunks(self.view, 'staged', hunk_line_nos=stage_lines)
-            else:
-                erase_hunks(self.view, 'staged')
-
+            paint_hunks(self.view, 'staged')
+            
 class ViewHunksCommand(sublime_plugin.TextCommand):
     """
     When a line with a hunk icon is selected and this command is run, 
