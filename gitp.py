@@ -152,8 +152,8 @@ def stage_hunks(view, choices):
     if not new_diff.endswith("\n"):
         new_diff += "\n"
     
-    diff_cli = ['git', 'apply', '--cached', '--recount', '--allow-overlap']
-    p = subprocess.Popen(diff_cli, 
+    apply_cli = ['git', 'apply', '--cached', '--recount', '--allow-overlap']
+    p = subprocess.Popen(apply_cli, 
                          cwd=dirname(view), 
                          stderr=subprocess.PIPE, 
                          stdin=subprocess.PIPE)
