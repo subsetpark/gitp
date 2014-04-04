@@ -15,6 +15,7 @@ DIGITS = ['Packages/gitp/icons/1.png',
          ]
 
 active_hunks = {}
+staged_hunks = {}
 
 def dirname(view):
     filename = view.file_name()
@@ -74,7 +75,7 @@ def erase_hunks(view, key):
             view.erase_regions('gitp_hunks'+ str(i))
     else:
         view.erase_regions(key)
-
+# stage this
 def paint_hunks(view, key, hunk_line_nos=None):
     erase_hunks(view, key)
     if not hunk_line_nos:
@@ -95,12 +96,15 @@ def paint_hunks(view, key, hunk_line_nos=None):
                                  digit, 
                                  sublime.DRAW_NO_FILL | sublime.PERSISTENT)
                 active_hunks[keyname] = view.get_regions(keyname)[0]
-        else:
+        elif key == "staged" and pts:
             view.add_regions(key,
                              pts, 
                              key, 
                              ICONS[key], 
                              sublime.HIDDEN | sublime.PERSISTENT)
+            for i, r in enumerate(view.get_regions(key)):
+                staged_hunks["staged_" + str(i)] = r
+                print("staged hunks: ", staged_hunks)
 
 def expand_sel(view):
     for r in view.sel():
