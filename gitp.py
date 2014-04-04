@@ -49,9 +49,24 @@ def diff_cli(view):
     else:
         return ['git', 'diff', filename]
 
+def staged_cli(view):
+    filename = view.file_name()
+    if is_prose(view):
+        return ['git', 'diff', '--cached', '--unified=1', filename]
+    else:
+        return ['git', 'diff', '--cached', filename]
+
 def gen_diff(view):
     if view.file_name():
         return subprocess.check_output(diff_cli(view), 
+                                       stderr=subprocess.STDOUT, 
+                                       cwd=dirname(view)).decode('UTF-8')
+    else:
+        return None
+
+def gen_staged(view):
+    if view.file_name():
+        return subprocess.check_output(staged_cli(view), 
                                        stderr=subprocess.STDOUT, 
                                        cwd=dirname(view)).decode('UTF-8')
     else:
@@ -199,17 +214,29 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
                         for hunk, region in active_hunks.items() 
                         if self.view.sel().contains(region)]
         choices = get_hunk_ints(hunks_to_view)
-
         if choices:
-            diff = gen_diff(self.view)
-            new_diff = "\n".join("\n".join(hunk) 
-                                 for i, hunk in enumerate(chunk(lines(diff))) 
-                                 if i in choices)
-            ndw = self.view.window().new_file()
-            ndw.set_scratch(True)
-            ndw.set_name('*gitp Hunk View: {}*'
-                         .format(self.view.file_name().split("/")[-1]))
-            ndw.run_command('new_diff', {'nd': new_diff})
+          gen_cli = gen_diff
+        else:
+          hunks_to_view = [hunk 
+                          for hunk, region in staged_hunks.items() 
+                          if self.view.sel().contains(region)]
+          choices = get_hunk_ints(hunks_to_view)
+          if choices:
+            gen_cli = gen_staged
+        
+        if gen_cli:
+          diff = gen_cli(self.view)
+          new_diff = "\n".join("\n".join(hunk) 
+                               for i, hunk in enumerate(chunk(lines(diff))) 
+                               if i in choices)
+          ndw = self.view.window().new_file()
+          ndw.set_scratch(True)
+          ndw.set_name('*gitp Hunk View: {}*'
+                       .format(self.view.file_name().split("/")[-1]))
+          ndw.run_command('new_diff', {'nd': new_diff})
+
+
+
 
 class StageTheseHunksCommand(sublime_plugin.TextCommand):
     """
@@ -233,7 +260,12 @@ class UnstageTheseHunks(sublime_plugin.TextCommand):
         hunks_to_unstage = [hunk 
                         for hunk, region in staged_hunks.items() 
                         if self.view.sel().contains(region)]
-        print(hunks_to_unstage)
+        print("hunks to unstage: ", hunks_to_unstage)
+        choices = get_hunk_ints(hunks_to_unstage)
+        print(choices)
+        if choices:
+            unstage_hunks(self.view, choices)
+        
 
 class NewDiffCommand(sublime_plugin.TextCommand):
     def run(self, edit, nd=None):
