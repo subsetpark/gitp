@@ -81,7 +81,7 @@ def analyze_diff(diff):
     hunk_line_nos = [int(word.split(',')[0].translate({ord(i) : None
                      for i in '-+,'}))
                      for word in hunk_metadata]
-    return diff, hunk_line_nos
+    return hunk_line_nos
 
 def erase_hunks(view, key):
     if key == "active":
@@ -95,7 +95,7 @@ def erase_hunks(view, key):
 
 def paint_hunks(view, key):
     erase_hunks(view, key)
-    _, hunk_line_nos = analyze_diff(gen_diff(view, key))
+    hunk_line_nos = analyze_diff(gen_diff(view, key))
     pts = []
     modifier = 1 if is_prose(view) else 2
     if hunk_line_nos:
@@ -143,8 +143,8 @@ def popen(cli, view):
 def stage_hunks(view, choices):
     h_to_stage = [0] + choices
     filename = view.file_name()
-
-    diff, hunk_line_nos = analyze_diff(gen_diff(view))
+    diff = gen_diff(view)
+    hunk_line_nos = analyze_diff(diff)
     last_line = diff.splitlines()[-1]
     final_line = last_line if last_line.startswith('\\') else False
 
