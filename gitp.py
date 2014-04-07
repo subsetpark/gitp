@@ -102,7 +102,6 @@ def paint_hunks(view, key):
         pts = [sublime.Region(view.text_point(l + modifier, 0))
                for l in hunk_line_nos]
         if key == "active" and pts:
-            # We treat these specially in order to get custom icons.
             for i, pt in enumerate(pts):
                 keyname = 'gitp_hunks'+str(i)
                 digit = DIGITS[i] if i < len(DIGITS) else 'bookmark'
@@ -137,7 +136,7 @@ def select_diff_portions(diff, choices):
   return "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff)))
                                    if i in choices)
 def popen(cli, view):
-    return subprocess.Popen(cli, # factor out if you can
+    return subprocess.Popen(cli,
                          cwd=dirname(view),
                          stderr=subprocess.PIPE,
                          stdin=subprocess.PIPE)
@@ -188,7 +187,6 @@ class EditDiffCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         self.view.window().show_input_panel('Please enter choices: ',
                                             '', self.crunch_diff, None, None)
-# trivial change
 class CommitHunks(sublime_plugin.TextCommand):
     def commit_patch(self, str):
         p = popen(['git', 'commit', '--file=-'], self.view)
@@ -248,9 +246,6 @@ class StageTheseHunksCommand(sublime_plugin.TextCommand):
     """
     def run(self, edit):
         expand_sel(self.view)
-        # three
-        # line
-        # change
         hunks_to_stage = select_hunks_of_type(self.view, 'active')
         if hunks_to_stage:
             stage_hunks(self.view, hunks_to_stage)
@@ -290,6 +285,3 @@ class HunkListener(sublime_plugin.EventListener):
 
     def on_activated(self, view):
         view.run_command("display_hunks")
-
-    # def on_new(self, view):
-    #     load_registers(view)
