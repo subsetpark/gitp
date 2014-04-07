@@ -215,43 +215,47 @@ class DisplayHunksCommand(sublime_plugin.TextCommand):
             print("staged hunks in {}: {}".format(filename.split("/")[-1], registers[self.view.buffer_id()].get('staged_hunks')))
             paint_hunks(self.view, 'hunks')
             paint_hunks(self.view, 'staged')
-            
+
 class ViewHunksCommand(sublime_plugin.TextCommand):
     """
-    When a line with a hunk icon is selected and this command is run, 
+    When a line with a hunk icon is selected and this command is run,
     it will open a window with that hunk displayed.
     """
+    def select_hunks_of_type(self, view_type):
+        hunks_to_view = [hunk
+                        for hunk, region in registers[self.view.buffer_id()].get(view_type+'_hunks').items()
+                        if self.view.sel().contains(region)]
+        selected_hunk_labels = get_hunk_ints(hunks_to_view)
+        return selected_hunk_labels
+
     def run(self, edit):
         expand_sel(self.view)
-        hunks_to_view = [hunk 
-                        for hunk, region in registers[self.view.buffer_id()].get('active_hunks').items()
-                        if self.view.sel().contains(region)]
-        choices = get_hunk_ints(hunks_to_view)
-        gen_cli = False
+
         print("active hunks: ", registers[self.view.buffer_id()].get('active_hunks'))
         print("staged hunks: ", registers[self.view.buffer_id()].get('staged_hunks'))
         print("selection: ", list(self.view.sel()))
-        print("choices: ", choices)
-        if choices:
-          gen_cli = gen_diff
-          win_name = '*gitp Hunk View: {}*'.format(self.view.file_name()
-                                                   .split("/")[-1])
-        else:
-          hunks_to_view = [hunk 
-                          for hunk, region in registers[self.view.buffer_id()].get('staged_hunks').items()
-                          if self.view.sel().contains(region)]
-          choices = get_hunk_ints(hunks_to_view)
-          if choices:
+
+        selected = self.select_hunks_of_type('active')
+        gen_cli = gen_diff
+        title = "Hunk"
+
+        if not selected:
+            selected = self.select_hunks_of_type('staged')
             gen_cli = gen_staged
-            win_name = '*gitp Staged View: {}*'.format(self.view.file_name()
-                                                       .split("/")[-1])
-        if gen_cli:
-          diff = gen_cli(self.view)
-          new_diff = select_diff_portions(diff, choices)
-          ndw = self.view.window().new_file()
-          ndw.set_scratch(True)
-          ndw.set_name(win_name)
-          ndw.run_command('new_diff', {'nd': new_diff})
+            title = "Staged"
+
+        if not selected:
+            return
+
+        diff = gen_cli(self.view)
+        new_diff = select_diff_portions(diff, selected)
+        ndw = self.view.window().new_file()
+        ndw.set_scratch(True)
+
+        win_name = '*gitp {} View: {}*'.format(title, self.view.file_name()
+                                                     .split("/")[-1])
+        ndw.set_name(win_name)
+        ndw.run_command('new_diff', {'nd': new_diff})
 
 class StageTheseHunksCommand(sublime_plugin.TextCommand):
     """
