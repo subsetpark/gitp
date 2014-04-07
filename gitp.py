@@ -159,26 +159,6 @@ def select_hunks_of_type(view, view_type):
         selected_hunk_labels = get_hunk_ints(hunks_to_view)
         return selected_hunk_labels
 
-class EditDiffCommand(sublime_plugin.TextCommand):
-    def crunch_diff(self, str):
-        choices = [int(char) for char in str if char.isdigit()]
-        stage_hunks(self.view, choices)
-
-    def run(self, edit):
-        self.view.window().show_input_panel('Please enter choices: ',
-                                            '', self.crunch_diff, None, None)
-
-class CommitHunksCommand(sublime_plugin.TextCommand):
-    def commit_patch(self, str):
-        p = popen(['git', 'commit', '--file=-'], self.view)
-        print("git commit response: ",
-              p.communicate(input=str.encode('utf-8')))
-        erase_hunks(self.view, 'staged')
-
-    def run(self, edit):
-        self.view.window().show_input_panel('Please enter a commit message: ',
-                                            '', self.commit_patch, None, None)
-
 class DisplayHunksCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         filename = self.view.file_name()
@@ -191,6 +171,51 @@ class DisplayHunksCommand(sublime_plugin.TextCommand):
                          registers[id(self.view)]['staged']))
             paint_hunks(self.view, 'active')
             paint_hunks(self.view, 'staged')
+
+class StageFile(sublime_plugin.TextCommand):
+    def run(self, edit):
+        filename = self.view.file_name()
+        if filename:
+            check_output(['git', 'add', filename], self.view)
+            self.view.run_command('display_hunks')
+
+class EditDiffCommand(sublime_plugin.TextCommand):
+    def crunch_diff(self, str):
+        choices = [int(char) for char in str if char.isdigit()]
+        stage_hunks(self.view, choices)
+
+    def run(self, edit):
+        self.view.window().show_input_panel('Please enter choices: ',
+                                            '', self.crunch_diff, None, None)
+
+class StageTheseHunksCommand(sublime_plugin.TextCommand):
+    """
+    Stages currently selected hunks
+    """
+    def run(self, edit):
+        expand_sel(self.view)
+        hunks_to_stage = select_hunks_of_type(self.view, 'active')
+        if hunks_to_stage:
+            stage_hunks(self.view, hunks_to_stage)
+
+class UnstageTheseHunks(sublime_plugin.TextCommand):
+    """
+    The opposite of above.
+    """
+    def run(self, edit):
+        expand_sel(self.view)
+        hunks_to_unstage =  select_hunks_of_type(self.view, 'staged')
+        print('*' * 10)
+        print("hunks to unstage: ", hunks_to_unstage)
+        print("unstage choices: ", hunks_to_unstage)
+        if hunks_to_unstage:
+            unstage_hunks(self.view, hunks_to_unstage)
+        staged_hunk_ints = set(get_hunk_ints(
+                              registers[id(self.view)]['staged'].keys()))
+        stage_choices =  staged_hunk_ints - set(hunks_to_unstage)
+        print("staging choices: ", stage_choices)
+        # stage_hunks(self.view, stage_choices)
+        self.view.run_command('display_hunks')
 
 class ViewHunksCommand(sublime_plugin.TextCommand):
     """
@@ -225,34 +250,16 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
         ndw.set_name(win_name)
         ndw.run_command('new_diff', {'nd': new_diff})
 
-class StageTheseHunksCommand(sublime_plugin.TextCommand):
-    """
-    Stages currently selected hunks
-    """
-    def run(self, edit):
-        expand_sel(self.view)
-        hunks_to_stage = select_hunks_of_type(self.view, 'active')
-        if hunks_to_stage:
-            stage_hunks(self.view, hunks_to_stage)
+class CommitHunksCommand(sublime_plugin.TextCommand):
+    def commit_patch(self, str):
+        p = popen(['git', 'commit', '--file=-'], self.view)
+        print("git commit response: ",
+              p.communicate(input=str.encode('utf-8')))
+        erase_hunks(self.view, 'staged')
 
-class UnstageTheseHunks(sublime_plugin.TextCommand):
-    """
-    The opposite of above.
-    """
     def run(self, edit):
-        expand_sel(self.view)
-        hunks_to_unstage =  select_hunks_of_type(self.view, 'staged')
-        print('*' * 10)
-        print("hunks to unstage: ", hunks_to_unstage)
-        print("unstage choices: ", hunks_to_unstage)
-        if hunks_to_unstage:
-            unstage_hunks(self.view, hunks_to_unstage)
-        staged_hunk_ints = set(get_hunk_ints(
-                              registers[id(self.view)]['staged'].keys()))
-        stage_choices =  staged_hunk_ints - set(hunks_to_unstage)
-        print("staging choices: ", stage_choices)
-        # stage_hunks(self.view, stage_choices)
-        self.view.run_command('display_hunks')
+        self.view.window().show_input_panel('Please enter a commit message: ',
+                                            '', self.commit_patch, None, None)
 
 class NewDiffCommand(sublime_plugin.TextCommand):
     def run(self, edit, nd=None):
