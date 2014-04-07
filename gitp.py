@@ -221,13 +221,6 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
     When a line with a hunk icon is selected and this command is run,
     it will open a window with that hunk displayed.
     """
-    def select_hunks_of_type(self, view_type):
-        hunks_to_view = [hunk
-                        for hunk, region in registers[self.view.buffer_id()].get(view_type+'_hunks').items()
-                        if self.view.sel().contains(region)]
-        selected_hunk_labels = get_hunk_ints(hunks_to_view)
-        return selected_hunk_labels
-
     def run(self, edit):
         expand_sel(self.view)
 
@@ -235,12 +228,12 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
         print("staged hunks: ", registers[self.view.buffer_id()].get('staged_hunks'))
         print("selection: ", list(self.view.sel()))
 
-        selected = self.select_hunks_of_type('active')
+        selected = select_hunks_of_type(self.view, 'active')
         gen_cli = gen_diff
         title = "Hunk"
 
         if not selected:
-            selected = self.select_hunks_of_type('staged')
+            selected = select_hunks_of_type(self.view, 'staged')
             gen_cli = gen_staged
             title = "Staged"
 
@@ -266,12 +259,9 @@ class StageTheseHunksCommand(sublime_plugin.TextCommand):
         # three
         # line
         # change
-        hunks_to_stage = [hunk
-                        for hunk, region in registers[self.view.buffer_id()].get('active_hunks').items()
-                        if self.view.sel().contains(region)]
-        choices = get_hunk_ints(hunks_to_stage)
-        if choices:
-            stage_hunks(self.view, choices)
+        hunks_to_stage = select_hunks_of_type(self.view, 'active')
+        if hunks_to_stage:
+            stage_hunks(self.view, hunks_to_stage)
 
 class UnstageTheseHunks(sublime_plugin.TextCommand):
     """
@@ -279,16 +269,13 @@ class UnstageTheseHunks(sublime_plugin.TextCommand):
     """
     def run(self, edit):
         expand_sel(self.view)
-        hunks_to_unstage = [hunk 
-                        for hunk, region in registers[self.view.buffer_id()].get('staged_hunks').items() 
-                        if self.view.sel().contains(region)]
+        hunks_to_unstage =  select_hunks_of_type(self.view, 'staged')
         print('*' * 10)
         print("hunks to unstage: ", hunks_to_unstage)
-        choices = get_hunk_ints(hunks_to_unstage)
-        print("unstage choices: ",choices)
-        if choices:
-            unstage_hunks(self.view, choices)
-        stage_choices = set(get_hunk_ints(registers[self.view.buffer_id()].get('staged_hunks').keys())) - set(choices)
+        print("unstage choices: ", hunks_to_unstage)
+        if hunks_to_unstage:
+            unstage_hunks(self.view, hunks_to_unstage)
+        stage_choices = set(get_hunk_ints(registers[self.view.buffer_id()].get('staged_hunks').keys())) - set(hunks_to_unstage)
         print("staging choices: ", stage_choices)
         # stage_hunks(self.view, stage_choices)
         self.view.run_command('display_hunks')
