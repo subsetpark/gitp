@@ -14,7 +14,7 @@ DIGITS = ['Packages/gitp/icons/1.png',
          'Packages/gitp/icons/9.png'
          ]
 
-registers = {}
+registers = {} # consider a default dict (import from collections)
 
 def load_registers(view):
     registers[view.buffer_id()] = { 'active_hunks': {},
@@ -81,7 +81,7 @@ def analyze_diff(diff):
     return diff, hunk_line_nos
 
 def erase_hunks(view, key):
-    if key == "hunks":
+    if key == "hunks": # recommend 'active' for consistency
         for k in registers[view.buffer_id()].get('active_hunks').keys():
             view.erase_regions(k)
         registers[view.buffer_id()].get('active_hunks').clear()
@@ -98,7 +98,7 @@ def paint_hunks(view, key):
     if hunk_line_nos:
         pts = [sublime.Region(view.text_point(l + modifier, 0))
                for l in hunk_line_nos]
-        if key is "hunks" and pts:
+        if key is "hunks" and pts: # don't use `is` with strings
             # We treat these specially in order to get custom icons.
             for i, pt in enumerate(pts):
                 keyname = 'gitp_hunks'+str(i)
@@ -150,7 +150,7 @@ def stage_hunks(view, choices):
         new_diff += "\n"
 
     apply_cli = ['git', 'apply', '--cached', '--recount', '--allow-overlap']
-    p = subprocess.Popen(apply_cli,
+    p = subprocess.Popen(apply_cli, # factor out if you can
                          cwd=dirname(view),
                          stderr=subprocess.PIPE,
                          stdin=subprocess.PIPE)
