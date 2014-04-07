@@ -117,7 +117,8 @@ def paint_hunks(view, key):
                                  "gitp",
                                  digit,
                                  sublime.DRAW_NO_FILL | sublime.PERSISTENT)
-                registers[id(view)]['active_hunks'][keyname] = view.get_regions(keyname)[0]
+                r = view.get_regions(keyname)[0]
+                registers[id(view)]['active_hunks'][keyname] = r
         elif key == "staged" and pts:
             for i, pt in enumerate(pts):
                 keyname = 'staged_hunks'+str(i)
@@ -126,7 +127,8 @@ def paint_hunks(view, key):
                                  "gitp",
                                  ICONS[key],
                                  sublime.HIDDEN | sublime.PERSISTENT)
-                registers[id(view)]['staged_hunks'][keyname] = view.get_regions(keyname)[0]
+                r = view.get_regions(keyname)[0]
+                registers[id(view)]['staged_hunks'][keyname] = r
 
 def expand_sel(view):
     for r in view.sel():
@@ -158,7 +160,8 @@ def stage_hunks(view, choices):
     if not new_diff.endswith("\n"):
         new_diff += "\n"
 
-    p = popen(['git', 'apply', '--cached', '--recount', '--allow-overlap'], view)
+    p = popen(['git', 'apply', '--cached', '--recount', '--allow-overlap'],
+              view)
 
     print("git staging response: ",
           p.communicate(input=new_diff.encode('UTF-8')))
@@ -172,12 +175,11 @@ def unstage_hunks(view, choices):
     view.run_command('display_hunks')
 
 def select_hunks_of_type(view, view_type):
-        hunks_to_view = [hunk
-                        for hunk, region in registers[id(view)][view_type+'_hunks'].items()
-                        if view.sel().contains(region)]
+        hunks_to_view = [hunk for hunk, region in 
+                         registers[id(view)][view_type + '_hunks'].items()
+                         if view.sel().contains(region)]
         selected_hunk_labels = get_hunk_ints(hunks_to_view)
         return selected_hunk_labels
-
 
 class EditDiffCommand(sublime_plugin.TextCommand):
     def crunch_diff(self, str):
@@ -187,6 +189,7 @@ class EditDiffCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         self.view.window().show_input_panel('Please enter choices: ',
                                             '', self.crunch_diff, None, None)
+
 class CommitHunks(sublime_plugin.TextCommand):
     def commit_patch(self, str):
         p = popen(['git', 'commit', '--file=-'], self.view)
@@ -202,8 +205,12 @@ class DisplayHunksCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         filename = self.view.file_name()
         if filename:
-            print("active hunks in {}: {}".format(filename.split("/")[-1], registers[id(self.view)]['active_hunks']))
-            print("staged hunks in {}: {}".format(filename.split("/")[-1], registers[id(self.view)]['staged_hunks']))
+            print("active hunks in {}: {}"
+                 .format(filename.split("/")[-1], 
+                         registers[id(self.view)]['active_hunks']))
+            print("staged hunks in {}: {}"
+                 .format(filename.split("/")[-1],
+                         registers[id(self.view)]['staged_hunks']))
             paint_hunks(self.view, 'active')
             paint_hunks(self.view, 'staged')
 
@@ -235,7 +242,6 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
         new_diff = select_diff_portions(diff, selected)
         ndw = self.view.window().new_file()
         ndw.set_scratch(True)
-
         win_name = '*gitp {} View: {}*'.format(title, self.view.file_name()
                                                      .split("/")[-1])
         ndw.set_name(win_name)
@@ -263,7 +269,9 @@ class UnstageTheseHunks(sublime_plugin.TextCommand):
         print("unstage choices: ", hunks_to_unstage)
         if hunks_to_unstage:
             unstage_hunks(self.view, hunks_to_unstage)
-        stage_choices = set(get_hunk_ints(registers[id(self.view)]['staged_hunks'].keys())) - set(hunks_to_unstage)
+        staged_hunk_ints = set(get_hunk_ints(
+                              registers[id(self.view)]['staged_hunks'].keys()))
+        stage_choices =  staged_hunk_ints - set(hunks_to_unstage)
         print("staging choices: ", stage_choices)
         # stage_hunks(self.view, stage_choices)
         self.view.run_command('display_hunks')
