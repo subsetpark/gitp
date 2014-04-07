@@ -1,6 +1,7 @@
 import subprocess, sublime, sublime_plugin
+from collections import defaultdict
 
-ICONS = { 'hunks': 'bookmark',
+ICONS = { 'active': 'bookmark',
           'staged': 'dot'
           }
 DIGITS = ['Packages/gitp/icons/1.png',
@@ -81,14 +82,14 @@ def analyze_diff(diff):
     return diff, hunk_line_nos
 
 def erase_hunks(view, key):
-    if key == "hunks": # recommend 'active' for consistency
-        for k in registers[view.buffer_id()].get('active_hunks').keys():
+    if key == "active":
+        for k in registers[id(view)]['active_hunks'].keys():
             view.erase_regions(k)
-        registers[view.buffer_id()].get('active_hunks').clear()
+        registers[id(view)]['active_hunks'].clear()
     elif key == "staged":
-        for k in registers[view.buffer_id()].get('staged_hunks').keys():
+        for k in registers[id(view)]['staged_hunks'].keys():
             view.erase_regions(k)
-        registers[view.buffer_id()].get('staged_hunks').clear()
+        registers[id(view)]['staged_hunks'].clear()
 
 def paint_hunks(view, key):
     erase_hunks(view, key)
@@ -98,7 +99,7 @@ def paint_hunks(view, key):
     if hunk_line_nos:
         pts = [sublime.Region(view.text_point(l + modifier, 0))
                for l in hunk_line_nos]
-        if key is "hunks" and pts: # don't use `is` with strings
+        if key == "active" and pts:
             # We treat these specially in order to get custom icons.
             for i, pt in enumerate(pts):
                 keyname = 'gitp_hunks'+str(i)
