@@ -81,23 +81,15 @@ def analyze_diff(diff):
     """
     Analyze a diff file for unidiff content.
     """
-    diff_lines = diff.splitlines()
     hunk_metadata = [line.split()[2]
-                     for line in diff_lines if line.startswith('@@')]
-    hunk_line_nos = [int(word.split(',')[0].translate({ord(i) : None
-                     for i in '-+,'}))
-                     for word in hunk_metadata]
-    return hunk_line_nos
+                     for line in diff.splitlines() if line.startswith('@@')]
+    return [int(word.split(',')[0].translate({ord(i) : None for i in '-+,'}))
+            for word in hunk_metadata]
 
 def erase_hunks(view, key):
-    if key == "active":
-        for k in registers[id(view)]['active_hunks'].keys():
-            view.erase_regions(k)
-        registers[id(view)]['active_hunks'].clear()
-    elif key == "staged":
-        for k in registers[id(view)]['staged_hunks'].keys():
-            view.erase_regions(k)
-        registers[id(view)]['staged_hunks'].clear()
+    for k in registers[id(view)][key].keys():
+        view.erase_regions(k)
+    registers[id(view)][key].clear()
 
 def paint_hunks(view, key):
     erase_hunks(view, key)
