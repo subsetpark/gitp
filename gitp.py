@@ -88,9 +88,11 @@ def erase_hunks(view, key):
     if key == "hunks":
         for k in active_hunks.keys():
             view.erase_regions(k)
+        active_hunks.clear()
     elif key == "staged":
         for k in staged_hunks.keys():
             view.erase_regions(k)
+        staged_hunks.clear()
 
 def paint_hunks(view, key):
     erase_hunks(view, key)
@@ -171,7 +173,6 @@ def unstage_hunks(view, choices):
                             subprocess.check_output(unstage_cli,
                             cwd= dirname(view),
                             stderr=subprocess.PIPE))
-    staged_hunks = {}
     view.run_command('display_hunks')
 
 class EditDiffCommand(sublime_plugin.TextCommand):
