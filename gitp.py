@@ -136,7 +136,11 @@ def get_hunk_ints(regions):
 def select_diff_portions(diff, choices):
   return "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff)))
                                    if i in choices)
-
+def popen(cli, view):
+    return subprocess.Popen(cli, # factor out if you can
+                         cwd=dirname(view),
+                         stderr=subprocess.PIPE,
+                         stdin=subprocess.PIPE)
 def stage_hunks(view, choices):
     h_to_stage = [0] + choices
     filename = view.file_name()
@@ -152,11 +156,8 @@ def stage_hunks(view, choices):
     if not new_diff.endswith("\n"):
         new_diff += "\n"
 
-    apply_cli = ['git', 'apply', '--cached', '--recount', '--allow-overlap']
-    p = subprocess.Popen(apply_cli, # factor out if you can
-                         cwd=dirname(view),
-                         stderr=subprocess.PIPE,
-                         stdin=subprocess.PIPE)
+    p = popen(['git', 'apply', '--cached', '--recount', '--allow-overlap'], view)
+
     print("git staging response: ",
           p.communicate(input=new_diff.encode('UTF-8')))
     view.run_command('display_hunks')
@@ -190,9 +191,7 @@ class EditDiffCommand(sublime_plugin.TextCommand):
 # trivial change
 class CommitHunks(sublime_plugin.TextCommand):
     def commit_patch(self, str):
-        p = subprocess.Popen(['git', 'commit', '--file=-'],
-                             stderr=subprocess.STDOUT, stdin=subprocess.PIPE,
-                             cwd=dirname(self.view))
+        p = popen(['git', 'commit', '--file=-'], self.view)
         print("git commit response: ",
               p.communicate(input=str.encode('utf-8')))
         erase_hunks(self.view, 'staged')
