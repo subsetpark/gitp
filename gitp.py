@@ -63,13 +63,20 @@ def cli(view, view_type):
     command.append(filename)
     return command
 
+def check_output(command, view):
+    return subprocess.check_output(command,
+                                    stderr=subprocess.STDOUT,
+                                    cwd=dirname(view)).decode('UTF-8')
+
 def gen_diff(view, view_type='active'):
     if view.file_name():
-        return subprocess.check_output(cli(view, view_type),
-                                       stderr=subprocess.STDOUT,
-                                       cwd=dirname(view)).decode('UTF-8')
-    else:
-        return None
+        return check_output(cli(view, view_type), view)
+
+def popen(command, view):
+    return subprocess.Popen(command,
+                         cwd=dirname(view),
+                         stderr=subprocess.PIPE,
+                         stdin=subprocess.PIPE)
 
 def analyze_diff(diff):
     """
@@ -165,10 +172,7 @@ def unstage_hunks(view, choices):
     #first we'll unstage everything, then restage without the choices.
     filename = view.file_name()
     unstage_cli = ['git', 'reset', 'HEAD', filename]
-    print("unstaging response: ",
-                            subprocess.check_output(unstage_cli,
-                            cwd= dirname(view),
-                            stderr=subprocess.PIPE))
+    print("unstaging response: ", check_output(unstage_cli))
     view.run_command('display_hunks')
 
 def select_hunks_of_type(view, view_type):
