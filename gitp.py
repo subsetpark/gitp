@@ -129,11 +129,11 @@ def stage_hunks(view, choices):
     diff = gen_diff(view)
     hunk_line_nos = analyze_diff(diff)
     last_line = diff.splitlines()[-1]
-    final_line = last_line if last_line.startswith('\\') else False
+    diff_capper = last_line if last_line.startswith('\\') else False
 
     new_diff = select_diff_portions(diff, h_to_stage)
-    if final_line and new_diff.splitlines()[-1] != final_line:
-        new_diff += ("\n" + final_line)
+    if diff_capper and new_diff.splitlines()[-1] != diff_capper:
+        new_diff += ("\n" + diff_capper)
     new_diff = (new_diff.rstrip(' '))
     if not new_diff.endswith("\n"):
         new_diff += "\n"
