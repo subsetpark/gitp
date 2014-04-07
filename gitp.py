@@ -270,9 +270,14 @@ class UnstageTheseHunks(sublime_plugin.TextCommand):
                         if self.view.sel().contains(region)]
         print("hunks to unstage: ", hunks_to_unstage)
         choices = get_hunk_ints(hunks_to_unstage)
-        print(choices)
+        print("unstage choices: ",choices)
         if choices:
             unstage_hunks(self.view, choices)
+        stage_choices = get_hunk_ints(staged_hunks.keys())
+        print("staging choices: ", stage_choices)
+        # stage_hunks(self.view, stage_choices)
+        self.view.run_command('display_hunks')
+
         
 
 class NewDiffCommand(sublime_plugin.TextCommand):
