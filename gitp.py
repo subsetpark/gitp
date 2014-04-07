@@ -1,9 +1,6 @@
 import subprocess, sublime, sublime_plugin
 from collections import defaultdict
 
-ICONS = { 'active': 'bookmark',
-          'staged': 'dot'
-          }
 DIGITS = ['Packages/gitp/icons/1.png',
          'Packages/gitp/icons/2.png',
          'Packages/gitp/icons/3.png',
