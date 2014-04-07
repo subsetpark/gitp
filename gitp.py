@@ -17,9 +17,8 @@ DIGITS = ['Packages/gitp/icons/1.png',
 
 registers = {}
 def load_registers(view):
-    registers[id(view)] = { 'active_hunks': defaultdict(),
-                            'staged_hunks': defaultdict()
-                        }
+    registers[id(view)] = {'active': defaultdict(),
+                           'staged': defaultdict()}
 
 def plugin_loaded():
     for window in sublime.windows():
@@ -108,27 +107,17 @@ def paint_hunks(view, key):
     if hunk_line_nos:
         pts = [sublime.Region(view.text_point(l + modifier, 0))
                for l in hunk_line_nos]
-        if key == "active" and pts:
+        if pts:
             for i, pt in enumerate(pts):
-                keyname = 'gitp_hunks'+str(i)
-                digit = DIGITS[i] if i < len(DIGITS) else 'bookmark'
-                view.add_regions(keyname,
-                                 [pt],
-                                 "gitp",
-                                 digit,
+                if key == "active":
+                    digit = DIGITS[i] if i < len(DIGITS) else 'bookmark'
+                elif key == "staged":
+                    digit = "dot"
+                keyname = key + str(i)
+                view.add_regions(keyname, [pt], "gitp", digit,
                                  sublime.DRAW_NO_FILL | sublime.PERSISTENT)
                 r = view.get_regions(keyname)[0]
-                registers[id(view)]['active_hunks'][keyname] = r
-        elif key == "staged" and pts:
-            for i, pt in enumerate(pts):
-                keyname = 'staged_hunks'+str(i)
-                view.add_regions(keyname,
-                                 [pt],
-                                 "gitp",
-                                 ICONS[key],
-                                 sublime.HIDDEN | sublime.PERSISTENT)
-                r = view.get_regions(keyname)[0]
-                registers[id(view)]['staged_hunks'][keyname] = r
+                registers[id(view)][key][keyname] = r
 
 def expand_sel(view):
     for r in view.sel():
@@ -171,12 +160,12 @@ def unstage_hunks(view, choices):
     #first we'll unstage everything, then restage without the choices.
     filename = view.file_name()
     unstage_cli = ['git', 'reset', 'HEAD', filename]
-    print("unstaging response: ", check_output(unstage_cli))
+    print("unstaging response: ", check_output(unstage_cli, view))
     view.run_command('display_hunks')
 
 def select_hunks_of_type(view, view_type):
         hunks_to_view = [hunk for hunk, region in 
-                         registers[id(view)][view_type + '_hunks'].items()
+                         registers[id(view)][view_type].items()
                          if view.sel().contains(region)]
         selected_hunk_labels = get_hunk_ints(hunks_to_view)
         return selected_hunk_labels
@@ -207,10 +196,10 @@ class DisplayHunksCommand(sublime_plugin.TextCommand):
         if filename:
             print("active hunks in {}: {}"
                  .format(filename.split("/")[-1], 
-                         registers[id(self.view)]['active_hunks']))
+                         registers[id(self.view)]['active']))
             print("staged hunks in {}: {}"
                  .format(filename.split("/")[-1],
-                         registers[id(self.view)]['staged_hunks']))
+                         registers[id(self.view)]['staged']))
             paint_hunks(self.view, 'active')
             paint_hunks(self.view, 'staged')
 
@@ -221,8 +210,8 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
     """
     def run(self, edit):
         expand_sel(self.view)
-        print("active hunks: ", registers[id(self.view)]['active_hunks'])
-        print("staged hunks: ", registers[id(self.view)]['staged_hunks'])
+        print("active hunks: ", registers[id(self.view)]['active'])
+        print("staged hunks: ", registers[id(self.view)]['staged'])
         print("selection: ", list(self.view.sel()))
 
         selected = select_hunks_of_type(self.view, 'active')
@@ -270,7 +259,7 @@ class UnstageTheseHunks(sublime_plugin.TextCommand):
         if hunks_to_unstage:
             unstage_hunks(self.view, hunks_to_unstage)
         staged_hunk_ints = set(get_hunk_ints(
-                              registers[id(self.view)]['staged_hunks'].keys()))
+                              registers[id(self.view)]['staged'].keys()))
         stage_choices =  staged_hunk_ints - set(hunks_to_unstage)
         print("staging choices: ", stage_choices)
         # stage_hunks(self.view, stage_choices)
