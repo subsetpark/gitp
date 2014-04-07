@@ -243,9 +243,6 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
           ndw.set_name(win_name)
           ndw.run_command('new_diff', {'nd': new_diff})
 
-
-
-
 class StageTheseHunksCommand(sublime_plugin.TextCommand):
     """
     Stages currently selected hunks
@@ -275,7 +272,7 @@ class UnstageTheseHunks(sublime_plugin.TextCommand):
             unstage_hunks(self.view, choices)
         stage_choices = get_hunk_ints(staged_hunks.keys())
         print("staging choices: ", stage_choices)
-        # stage_hunks(self.view, stage_choices)
+        stage_hunks(self.view, stage_choices)
         self.view.run_command('display_hunks')
 
         
