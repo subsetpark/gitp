@@ -168,7 +168,7 @@ class EditDiffCommand(sublime_plugin.TextCommand):
         self.view.window().show_input_panel('Please enter choices: ',
                                             '', self.crunch_diff, None, None)
 
-class CommitHunks(sublime_plugin.TextCommand):
+class CommitHunksCommand(sublime_plugin.TextCommand):
     def commit_patch(self, str):
         p = popen(['git', 'commit', '--file=-'], self.view)
         print("git commit response: ",
