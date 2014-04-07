@@ -14,8 +14,18 @@ DIGITS = ['Packages/gitp/icons/1.png',
          'Packages/gitp/icons/9.png'
          ]
 
-active_hunks = {}
-staged_hunks = {}
+registers = {}
+
+def load_registers(view):
+    registers[view.buffer_id()] = { 'active_hunks': {},
+                        'staged_hunks': {}
+                        }
+
+def plugin_loaded():
+    for window in sublime.windows():
+        for view in window.views():
+            print("loading register: ", view.file_name())
+            load_registers(view)
 
 def dirname(view):
     filename = view.file_name()
@@ -86,13 +96,13 @@ def analyze_diff(diff):
 
 def erase_hunks(view, key):
     if key == "hunks":
-        for k in active_hunks.keys():
+        for k in registers[view.buffer_id()].get('active_hunks').keys():
             view.erase_regions(k)
-        active_hunks.clear()
+        registers[view.buffer_id()].get('active_hunks').clear()
     elif key == "staged":
-        for k in staged_hunks.keys():
+        for k in registers[view.buffer_id()].get('staged_hunks').keys():
             view.erase_regions(k)
-        staged_hunks.clear()
+        registers[view.buffer_id()].get('staged_hunks').clear()
 
 def paint_hunks(view, key):
     erase_hunks(view, key)
@@ -115,7 +125,7 @@ def paint_hunks(view, key):
                                  "gitp", 
                                  digit, 
                                  sublime.DRAW_NO_FILL | sublime.PERSISTENT)
-                active_hunks[keyname] = view.get_regions(keyname)[0]
+                registers[view.buffer_id()].get('active_hunks')[keyname] = view.get_regions(keyname)[0]
         elif key == "staged" and pts:
             for i, pt in enumerate(pts):
                 keyname = 'staged_hunks'+str(i)
@@ -124,7 +134,7 @@ def paint_hunks(view, key):
                                  "gitp", 
                                  ICONS[key], 
                                  sublime.HIDDEN | sublime.PERSISTENT)
-                staged_hunks[keyname] = view.get_regions(keyname)[0]
+                registers[view.buffer_id()].get('staged_hunks')[keyname] = view.get_regions(keyname)[0]
 
 def expand_sel(view):
     for r in view.sel():
@@ -183,7 +193,7 @@ class EditDiffCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         self.view.window().show_input_panel('Please enter choices: ', 
                                             '', self.crunch_diff, None, None)
-
+# trivial change
 class CommitHunks(sublime_plugin.TextCommand):
     def commit_patch(self, str):
         p = subprocess.Popen(['git', 'commit', '--file=-'],
@@ -200,9 +210,9 @@ class CommitHunks(sublime_plugin.TextCommand):
 class DisplayHunksCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         filename = self.view.file_name()
-        print("active hunks: ",active_hunks)
-        print("staged hunks: ",staged_hunks)
         if filename:
+            print("active hunks in {}: {}".format(filename.split("/")[-1], registers[self.view.buffer_id()].get('active_hunks')))
+            print("staged hunks in {}: {}".format(filename.split("/")[-1], registers[self.view.buffer_id()].get('staged_hunks')))
             paint_hunks(self.view, 'hunks')
             paint_hunks(self.view, 'staged')
             
@@ -214,12 +224,12 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         expand_sel(self.view)
         hunks_to_view = [hunk 
-                        for hunk, region in active_hunks.items() 
+                        for hunk, region in registers[self.view.buffer_id()].get('active_hunks').items()
                         if self.view.sel().contains(region)]
         choices = get_hunk_ints(hunks_to_view)
         gen_cli = False
-        print("active hunks: ", active_hunks)
-        print("staged hunks: ", staged_hunks)
+        print("active hunks: ", registers[self.view.buffer_id()].get('active_hunks'))
+        print("staged hunks: ", registers[self.view.buffer_id()].get('staged_hunks'))
         print("selection: ", list(self.view.sel()))
         print("choices: ", choices)
         if choices:
@@ -228,7 +238,7 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
                                                    .split("/")[-1])
         else:
           hunks_to_view = [hunk 
-                          for hunk, region in staged_hunks.items() 
+                          for hunk, region in registers[self.view.buffer_id()].get('staged_hunks').items()
                           if self.view.sel().contains(region)]
           choices = get_hunk_ints(hunks_to_view)
           if choices:
@@ -249,8 +259,11 @@ class StageTheseHunksCommand(sublime_plugin.TextCommand):
     """
     def run(self, edit):
         expand_sel(self.view)
+        # three
+        # line
+        # change
         hunks_to_stage = [hunk
-                        for hunk, region in active_hunks.items() 
+                        for hunk, region in registers[self.view.buffer_id()].get('active_hunks').items()
                         if self.view.sel().contains(region)]
         choices = get_hunk_ints(hunks_to_stage)
         if choices:
@@ -263,19 +276,18 @@ class UnstageTheseHunks(sublime_plugin.TextCommand):
     def run(self, edit):
         expand_sel(self.view)
         hunks_to_unstage = [hunk 
-                        for hunk, region in staged_hunks.items() 
+                        for hunk, region in registers[self.view.buffer_id()].get('staged_hunks').items() 
                         if self.view.sel().contains(region)]
+        print('*' * 10)
         print("hunks to unstage: ", hunks_to_unstage)
         choices = get_hunk_ints(hunks_to_unstage)
         print("unstage choices: ",choices)
         if choices:
             unstage_hunks(self.view, choices)
-        stage_choices = get_hunk_ints(staged_hunks.keys())
+        stage_choices = set(get_hunk_ints(registers[self.view.buffer_id()].get('staged_hunks').keys())) - set(choices)
         print("staging choices: ", stage_choices)
-        stage_hunks(self.view, stage_choices)
+        # stage_hunks(self.view, stage_choices)
         self.view.run_command('display_hunks')
-
-        
 
 class NewDiffCommand(sublime_plugin.TextCommand):
     def run(self, edit, nd=None):
@@ -285,7 +297,16 @@ class NewDiffCommand(sublime_plugin.TextCommand):
 
 class HunkListener(sublime_plugin.EventListener):
     def on_post_save(self, view):
+        if not registers.get(view.buffer_id()):
+          load_registers(view)
         view.run_command("display_hunks")
 
+    def on_load(self, view):
+        if not registers.get(view.buffer_id()):
+          load_registers(view)
+          
     def on_activated(self, view):
         view.run_command("display_hunks")
+
+    # def on_new(self, view):
+    #     load_registers(view)
