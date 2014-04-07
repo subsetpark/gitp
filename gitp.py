@@ -50,31 +50,19 @@ def is_prose(view):
     return any(view.settings().get('syntax').count(lang)
            for lang in ('Markdown', 'Plain Text'))
 
-def diff_cli(view):
+def cli(view, view_type):
     filename = view.file_name()
+    command = ['git', 'diff']
+    if view_type == 'staged':
+        command.append('--cached')
     if is_prose(view):
-        return ['git', 'diff', '--unified=1', filename]
-    else:
-        return ['git', 'diff', filename]
+        command.append('--unified=1')
+    command.append(filename)
+    return command
 
-def staged_cli(view):
-    filename = view.file_name()
-    if is_prose(view):
-        return ['git', 'diff', '--cached', '--unified=1', filename]
-    else:
-        return ['git', 'diff', '--cached', filename]
-
-def gen_diff(view):
+def gen_diff(view, view_type='active'):
     if view.file_name():
-        return subprocess.check_output(diff_cli(view),
-                                       stderr=subprocess.STDOUT,
-                                       cwd=dirname(view)).decode('UTF-8')
-    else:
-        return None
-
-def gen_staged(view):
-    if view.file_name():
-        return subprocess.check_output(staged_cli(view),
+        return subprocess.check_output(cli(view, view_type),
                                        stderr=subprocess.STDOUT,
                                        cwd=dirname(view)).decode('UTF-8')
     else:
@@ -104,10 +92,7 @@ def erase_hunks(view, key):
 
 def paint_hunks(view, key):
     erase_hunks(view, key)
-    if key == "hunks":
-        _, hunk_line_nos = analyze_diff(gen_diff(view))
-    elif key == "staged":
-        _, hunk_line_nos = analyze_diff(gen_staged(view))
+    _, hunk_line_nos = analyze_diff(gen_diff(view, key))
     pts = []
     modifier = 1 if is_prose(view) else 2
     if hunk_line_nos:
@@ -219,7 +204,7 @@ class DisplayHunksCommand(sublime_plugin.TextCommand):
         if filename:
             print("active hunks in {}: {}".format(filename.split("/")[-1], registers[self.view.buffer_id()].get('active_hunks')))
             print("staged hunks in {}: {}".format(filename.split("/")[-1], registers[self.view.buffer_id()].get('staged_hunks')))
-            paint_hunks(self.view, 'hunks')
+            paint_hunks(self.view, 'active')
             paint_hunks(self.view, 'staged')
 
 class ViewHunksCommand(sublime_plugin.TextCommand):
@@ -235,18 +220,18 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
         print("selection: ", list(self.view.sel()))
 
         selected = select_hunks_of_type(self.view, 'active')
-        gen_cli = gen_diff
+        diff_type = 'active'
         title = "Hunk"
 
         if not selected:
             selected = select_hunks_of_type(self.view, 'staged')
-            gen_cli = gen_staged
+            diff_type = 'staged'
             title = "Staged"
 
         if not selected:
             return
 
-        diff = gen_cli(self.view)
+        diff = cli(self.view)
         new_diff = select_diff_portions(diff, selected)
         ndw = self.view.window().new_file()
         ndw.set_scratch(True)
