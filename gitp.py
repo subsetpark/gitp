@@ -163,6 +163,17 @@ def stage_hunks(view, choices):
           p.communicate(input=new_diff.encode('UTF-8')))
     view.run_command('display_hunks')
 
+def unstage_hunks(view, choices):
+    #first we'll unstage everything, then restage without the choices.
+    filename = view.file_name()
+    unstage_cli = ['git', 'reset', 'HEAD', filename]
+    print("unstaging response: ", 
+                            subprocess.check_output(unstage_cli,
+                            cwd= dirname(view),
+                            stderr=subprocess.PIPE))
+    staged_hunks = {}
+    view.run_command('display_hunks')
+
 class EditDiffCommand(sublime_plugin.TextCommand):
     def crunch_diff(self, str):
         choices = [int(char) for char in str if char.isdigit()]
