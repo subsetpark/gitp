@@ -29,8 +29,6 @@ def plugin_loaded():
 
 def dirname(view):
     filename = view.file_name()
-    if not filename:
-        return ""
     return filename[:filename.rfind('/')]
 
 def lines(s):
