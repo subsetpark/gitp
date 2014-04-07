@@ -142,11 +142,7 @@ def get_hunk_ints(regions):
 def select_diff_portions(diff, choices):
   return "\n".join("\n".join(hunk) for i, hunk in enumerate(chunk(lines(diff)))
                                    if i in choices)
-def popen(cli, view):
-    return subprocess.Popen(cli,
-                         cwd=dirname(view),
-                         stderr=subprocess.PIPE,
-                         stdin=subprocess.PIPE)
+
 def stage_hunks(view, choices):
     h_to_stage = [0] + choices
     filename = view.file_name()
@@ -234,7 +230,8 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
         if not selected:
             return
 
-        diff = cli(self.view)
+        diff = check_output(cli(self.view, diff_type), self.view)
+        print("diff: ", diff)
         new_diff = select_diff_portions(diff, selected)
         ndw = self.view.window().new_file()
         ndw.set_scratch(True)
