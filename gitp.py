@@ -188,8 +188,8 @@ class CommitHunks(sublime_plugin.TextCommand):
 class DisplayHunksCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         filename = self.view.file_name()
-        print(active_hunks)
-        print(staged_hunks)
+        print("active hunks: ",active_hunks)
+        print("staged hunks: ",staged_hunks)
         if filename:
             paint_hunks(self.view, 'hunks')
             paint_hunks(self.view, 'staged')
@@ -223,7 +223,6 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
             gen_cli = gen_staged
             win_name = '*gitp Staged View: {}*'.format(self.view.file_name()
                                                        .split("/")[-1])
-        
         if gen_cli:
           diff = gen_cli(self.view)
           new_diff = select_diff_portions(diff, choices)
