@@ -2,3 +2,4 @@
 __pycache__
 *.txt
 .swp
+gitp_utils.py
