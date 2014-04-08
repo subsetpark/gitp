@@ -196,27 +196,6 @@ class StageTheseHunksCommand(sublime_plugin.TextCommand):
         else:
             return
 
-class UnstageTheseHunks(sublime_plugin.TextCommand):
-    """
-    The opposite of above.
-    """
-    def run(self, edit):
-        filename = self.view.file_name()
-        if filename:
-            self.view.run_command('expand_selection', {'to': 'line'})
-            hunks_to_unstage =  select_hunks_of_type(self.view, 'staged')
-            print('*' * 10)
-            print("hunks to unstage: ", hunks_to_unstage)
-            print("unstage choices: ", hunks_to_unstage)
-            if hunks_to_unstage:
-                unstage_hunks(self.view, hunks_to_unstage)
-            staged_hunk_ints = set(get_hunk_ints(
-                                  registers[id(self.view)]['staged'].keys()))
-            stage_choices =  staged_hunk_ints - set(hunks_to_unstage)
-            print("staging choices: ", stage_choices)
-            # stage_hunks(self.view, stage_choices)
-            self.view.run_command('display_hunks')
-
 class ViewHunksCommand(sublime_plugin.TextCommand):
     """
     When a line with a hunk icon is selected and this command is run,
