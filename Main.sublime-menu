@@ -3,30 +3,32 @@
         "id": "tools",
         "children":
         [
-            {"id": "Select Diffs to Stage"},
-            {"command": "edit_diff"}
+            {"caption": "gitp",
+            "children":
+            [
+                {"id": "Select Diffs to Stage"},
+                {"command": "edit_diff"}
+                
+               
+                ,{ "id": "Stage Selected Diffs"},
+                 {"command": "stage_these_hunks"}
+                
             
-           
-            ,{ "id": "Stage Selected Diffs"},
-             {"command": "stage_these_hunks"}
+                ,{"id": "View Selected Hunks"},
+                 {"command": "view_hunks"}
+                
             
-        
-            ,{"id": "View Selected Hunks"},
-             {"command": "view_hunks"}
-            
-        
-            ,{"id": "Commit Staged Hunks"},
-             {"command": "commit_hunks"}
+                ,{"id": "Commit Staged Hunks"},
+                 {"command": "commit_hunks"}
 
-            ,{"id": "Stage This File"},
-             {"command": "stage_file"}
+                ,{"id": "Stage This File"},
+                 {"command": "stage_file"}
 
-            ,{"id": "Unstage Hunks"},
-             {"command": "unstage_hunks"}
-
-
-        ]
-
+                ,{"id": "Unstage Hunks"},
+                 {"command": "unstage_hunks"}
+            ]
+        }
+    ]
 }
     
     ]

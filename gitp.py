@@ -224,10 +224,12 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
                 title = "Staged"
 
             if not selected:
-                return
+                new_diff = check_output(cli(self.view, "active"), self.view)
+                title = "Diff"
 
-            diff = check_output(cli(self.view, diff_type), self.view)
-            new_diff = select_diff_portions(diff, selected)
+            if selected:
+                diff = check_output(cli(self.view, diff_type), self.view)
+                new_diff = select_diff_portions(diff, selected)
             ndw = self.view.window().new_file()
             ndw.set_scratch(True)
             win_name = '*gitp {} View: {}*'.format(title, self.view.file_name()
