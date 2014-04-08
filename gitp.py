@@ -202,13 +202,7 @@ class UnstageHunks(sublime_plugin.TextCommand):
     def run(self, edit):
         filename = self.view.file_name()
         if filename:
-            self.view.run_command('expand_selection', {'to': 'line'})
-            hunks_to_unstage =  select_hunks_of_type(self.view, 'staged')
-            if hunks_to_unstage:
-                unstage_hunks(self.view)
-            staged_hunk_ints = set(get_hunk_ints(
-                                  registers[id(self.view)]['staged'].keys()))
-            # stage_choices =  list(staged_hunk_ints - set(hunks_to_unstage))
+            unstage_hunks(self.view)
             self.view.run_command('display_hunks')
 
 class ViewHunksCommand(sublime_plugin.TextCommand):
