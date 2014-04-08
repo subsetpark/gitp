@@ -108,12 +108,6 @@ def paint_hunks(view, key):
                 r = view.get_regions(keyname)[0]
                 registers[id(view)][key][keyname] = r
 
-def expand_sel(view):
-    for r in view.sel():
-        l, c = view.rowcol(r.begin())
-        view.sel().add(sublime.Region(view.text_point(l, 0),
-                                      view.text_point(l, c)))
-
 def get_hunk_ints(regions):
     return [int("".join(char
                        for char in name
@@ -193,7 +187,7 @@ class StageTheseHunksCommand(sublime_plugin.TextCommand):
     Stages currently selected hunks
     """
     def run(self, edit):
-        expand_sel(self.view)
+        self.view.run_command('expand_selection', {'to': 'line'})
         hunks_to_stage = select_hunks_of_type(self.view, 'active')
         if hunks_to_stage:
             stage_hunks(self.view, hunks_to_stage)
@@ -203,7 +197,7 @@ class UnstageTheseHunks(sublime_plugin.TextCommand):
     The opposite of above.
     """
     def run(self, edit):
-        expand_sel(self.view)
+        self.view.run_command('expand_selection', {'to': 'line'})
         hunks_to_unstage =  select_hunks_of_type(self.view, 'staged')
         print('*' * 10)
         print("hunks to unstage: ", hunks_to_unstage)
@@ -223,7 +217,7 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
     it will open a window with that hunk displayed.
     """
     def run(self, edit):
-        expand_sel(self.view)
+        self.view.run_command('expand_selection', {'to': 'line'})
         print("active hunks: ", registers[id(self.view)]['active'])
         print("staged hunks: ", registers[id(self.view)]['staged'])
         print("selection: ", list(self.view.sel()))
