@@ -47,6 +47,10 @@ There are two ways to stage an individual hunk for commit in `gitp`:
 
 If one or more lines with hunk indicators are selected, this command will display the changes between the currently saved version and the most recent commit.
 
+### Unstaging
+
+- `ctrl-alt-z` : **unstage hunks**. Clears staged hunks.
+
 ### Committing hunks
 
 - `ctrl-alt-c` : **commit staged hunks**. The user is prompted for a commit message and all staged hunks are committed.

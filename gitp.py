@@ -195,7 +195,7 @@ class StageTheseHunksCommand(sublime_plugin.TextCommand):
         else:
             return
 
-class UnstageTheseHunks(sublime_plugin.TextCommand):
+class UnstageHunks(sublime_plugin.TextCommand):
     """
     The opposite of above.
     """

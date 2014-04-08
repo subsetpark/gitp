@@ -21,6 +21,9 @@
             ,{"id": "Stage This File"},
              {"command": "stage_file"}
 
+            ,{"id": "Unstage Hunks"},
+             {"command": "unstage_hunks"}
+
 
         ]
 
