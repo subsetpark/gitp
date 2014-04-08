@@ -1,0 +1,8 @@
+[
+    {"keys": ["ctrl+alt+x"], "command": "edit_diff"}
+    ,{"keys": ["ctrl+alt+c"], "command": "commit_hunks"}
+    ,{"keys": ["ctrl+alt+v"], "command": "view_hunks"}
+    ,{"keys": ["ctrl+alt+s"], "command": "stage_these_hunks"}
+    ,{"keys": ["ctrl+alt+z"], "command": "unstage_these_hunks"}
+    ,{"keys": ["ctrl+alt+a"], "command": "stage_file"}
+]
