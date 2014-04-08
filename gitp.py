@@ -157,6 +157,7 @@ class DisplayHunksCommand(sublime_plugin.TextCommand):
             paint_hunks(self.view, 'active')
             paint_hunks(self.view, 'staged')
 
+
 class StageFile(sublime_plugin.TextCommand):
     def run(self, edit):
         filename = self.view.file_name()
@@ -164,43 +165,54 @@ class StageFile(sublime_plugin.TextCommand):
             check_output(['git', 'add', filename], self.view)
             self.view.run_command('display_hunks')
 
+
 class EditDiffCommand(sublime_plugin.TextCommand):
     def crunch_diff(self, str):
         choices = [int(char) for char in str if char.isdigit()]
         stage_hunks(self.view, choices)
 
+
     def run(self, edit):
-        self.view.window().show_input_panel('Please enter choices: ',
-                                            '', self.crunch_diff, None, None)
+        filename = self.view.file_name()
+        if filename:
+            self.view.window().show_input_panel('Please enter choices: ',
+                                                '', self.crunch_diff, None, None)
 
 class StageTheseHunksCommand(sublime_plugin.TextCommand):
     """
     Stages currently selected hunks
     """
     def run(self, edit):
-        self.view.run_command('expand_selection', {'to': 'line'})
-        hunks_to_stage = select_hunks_of_type(self.view, 'active')
-        if hunks_to_stage:
-            stage_hunks(self.view, hunks_to_stage)
+        filename = self.view.file_name()
+        if filename:
+            self.view.run_command('expand_selection', {'to': 'line'})
+            hunks_to_stage = select_hunks_of_type(self.view, 'active')
+            if hunks_to_stage:
+                stage_hunks(self.view, hunks_to_stage)
+        else:
+            self.error("Not a file")
+            return
 
 class UnstageTheseHunks(sublime_plugin.TextCommand):
     """
     The opposite of above.
     """
     def run(self, edit):
-        self.view.run_command('expand_selection', {'to': 'line'})
-        hunks_to_unstage =  select_hunks_of_type(self.view, 'staged')
-        print('*' * 10)
-        print("hunks to unstage: ", hunks_to_unstage)
-        print("unstage choices: ", hunks_to_unstage)
-        if hunks_to_unstage:
-            unstage_hunks(self.view, hunks_to_unstage)
-        staged_hunk_ints = set(get_hunk_ints(
-                              registers[id(self.view)]['staged'].keys()))
-        stage_choices =  staged_hunk_ints - set(hunks_to_unstage)
-        print("staging choices: ", stage_choices)
-        # stage_hunks(self.view, stage_choices)
-        self.view.run_command('display_hunks')
+        filename = self.view.file_name()
+        if filename:
+            self.view.run_command('expand_selection', {'to': 'line'})
+            hunks_to_unstage =  select_hunks_of_type(self.view, 'staged')
+            print('*' * 10)
+            print("hunks to unstage: ", hunks_to_unstage)
+            print("unstage choices: ", hunks_to_unstage)
+            if hunks_to_unstage:
+                unstage_hunks(self.view, hunks_to_unstage)
+            staged_hunk_ints = set(get_hunk_ints(
+                                  registers[id(self.view)]['staged'].keys()))
+            stage_choices =  staged_hunk_ints - set(hunks_to_unstage)
+            print("staging choices: ", stage_choices)
+            # stage_hunks(self.view, stage_choices)
+            self.view.run_command('display_hunks')
 
 class ViewHunksCommand(sublime_plugin.TextCommand):
     """
@@ -208,32 +220,34 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
     it will open a window with that hunk displayed.
     """
     def run(self, edit):
-        self.view.run_command('expand_selection', {'to': 'line'})
-        print("active hunks: ", registers[id(self.view)]['active'])
-        print("staged hunks: ", registers[id(self.view)]['staged'])
-        print("selection: ", list(self.view.sel()))
+        filename = self.view.file_name()
+        if filename:
+            self.view.run_command('expand_selection', {'to': 'line'})
+            print("active hunks: ", registers[id(self.view)]['active'])
+            print("staged hunks: ", registers[id(self.view)]['staged'])
+            print("selection: ", list(self.view.sel()))
 
-        selected = select_hunks_of_type(self.view, 'active')
-        diff_type = 'active'
-        title = "Hunk"
+            selected = select_hunks_of_type(self.view, 'active')
+            diff_type = 'active'
+            title = "Hunk"
 
-        if not selected:
-            selected = select_hunks_of_type(self.view, 'staged')
-            diff_type = 'staged'
-            title = "Staged"
+            if not selected:
+                selected = select_hunks_of_type(self.view, 'staged')
+                diff_type = 'staged'
+                title = "Staged"
 
-        if not selected:
-            return
+            if not selected:
+                return
 
-        diff = check_output(cli(self.view, diff_type), self.view)
-        print("diff: ", diff)
-        new_diff = select_diff_portions(diff, selected)
-        ndw = self.view.window().new_file()
-        ndw.set_scratch(True)
-        win_name = '*gitp {} View: {}*'.format(title, self.view.file_name()
-                                                     .split("/")[-1])
-        ndw.set_name(win_name)
-        ndw.run_command('new_diff', {'nd': new_diff})
+            diff = check_output(cli(self.view, diff_type), self.view)
+            print("diff: ", diff)
+            new_diff = select_diff_portions(diff, selected)
+            ndw = self.view.window().new_file()
+            ndw.set_scratch(True)
+            win_name = '*gitp {} View: {}*'.format(title, self.view.file_name()
+                                                         .split("/")[-1])
+            ndw.set_name(win_name)
+            ndw.run_command('new_diff', {'nd': new_diff})
 
 class CommitHunksCommand(sublime_plugin.TextCommand):
     def commit_patch(self, str):
@@ -243,8 +257,10 @@ class CommitHunksCommand(sublime_plugin.TextCommand):
         erase_hunks(self.view, 'staged')
 
     def run(self, edit):
-        self.view.window().show_input_panel('Please enter a commit message: ',
-                                            '', self.commit_patch, None, None)
+        filename = self.view.file_name()
+        if filename:
+            self.view.window().show_input_panel('Please enter a commit message: ',
+                                                '', self.commit_patch, None, None)
 
 class NewDiffCommand(sublime_plugin.TextCommand):
     def run(self, edit, nd=None):
