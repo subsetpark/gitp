@@ -1,18 +1,9 @@
 import subprocess, sublime, sublime_plugin
 from collections import defaultdict
 
-DIGITS = ['Packages/gitp/icons/1.png',
-         'Packages/gitp/icons/2.png',
-         'Packages/gitp/icons/3.png',
-         'Packages/gitp/icons/4.png',
-         'Packages/gitp/icons/5.png',
-         'Packages/gitp/icons/6.png',
-         'Packages/gitp/icons/7.png',
-         'Packages/gitp/icons/8.png',
-         'Packages/gitp/icons/9.png'
-         ]
-
+DIGITS = ['Packages/gitp/icons/{}.png'.format(n) for n in range(1, 10)]
 registers = {}
+
 def load_registers(view):
     registers[id(view)] = {'active': defaultdict(),
                            'staged': defaultdict()}
