@@ -194,7 +194,6 @@ class StageTheseHunksCommand(sublime_plugin.TextCommand):
             if hunks_to_stage:
                 stage_hunks(self.view, hunks_to_stage)
         else:
-            self.error("Not a file")
             return
 
 class UnstageTheseHunks(sublime_plugin.TextCommand):
@@ -227,10 +226,6 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
         filename = self.view.file_name()
         if filename:
             self.view.run_command('expand_selection', {'to': 'line'})
-            print("active hunks: ", registers[id(self.view)]['active'])
-            print("staged hunks: ", registers[id(self.view)]['staged'])
-            print("selection: ", list(self.view.sel()))
-
             selected = select_hunks_of_type(self.view, 'active')
             diff_type = 'active'
             title = "Hunk"
