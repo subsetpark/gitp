@@ -140,8 +140,7 @@ def stage_hunks(view, choices):
           p.communicate(input=new_diff.encode('UTF-8')))
     view.run_command('display_hunks')
 
-def unstage_hunks(view, choices):
-    #first we'll unstage everything, then restage without the choices.
+def unstage_hunks(view):
     filename = view.file_name()
     unstage_cli = ['git', 'reset', 'HEAD', filename]
     print("unstaging response: ", check_output(unstage_cli, view))
@@ -195,6 +194,22 @@ class StageTheseHunksCommand(sublime_plugin.TextCommand):
                 stage_hunks(self.view, hunks_to_stage)
         else:
             return
+
+class UnstageTheseHunks(sublime_plugin.TextCommand):
+    """
+    The opposite of above.
+    """
+    def run(self, edit):
+        filename = self.view.file_name()
+        if filename:
+            self.view.run_command('expand_selection', {'to': 'line'})
+            hunks_to_unstage =  select_hunks_of_type(self.view, 'staged')
+            if hunks_to_unstage:
+                unstage_hunks(self.view)
+            staged_hunk_ints = set(get_hunk_ints(
+                                  registers[id(self.view)]['staged'].keys()))
+            # stage_choices =  list(staged_hunk_ints - set(hunks_to_unstage))
+            self.view.run_command('display_hunks')
 
 class ViewHunksCommand(sublime_plugin.TextCommand):
     """
