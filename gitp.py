@@ -8,11 +8,21 @@ def load_registers(view):
     registers[id(view)] = {'active': defaultdict(),
                            'staged': defaultdict()}
 
+def hunk_setup(view):
+    filename = view.file_name()
+    if filename:
+        try: 
+            check_output(['git', 'rev-parse'], view)
+            if not registers.get(id(view)):
+              load_registers(view)
+            view.run_command("display_hunks")
+        except subprocess.CalledProcessError:
+            return
+
 def plugin_loaded():
     for window in sublime.windows():
         for view in window.views():
-            print("loading register: ", view.file_name())
-            load_registers(view)
+            hunk_setup(view)
 
 def id(view):
     return view.buffer_id()
@@ -148,15 +158,9 @@ class DisplayHunksCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         filename = self.view.file_name()
         if filename:
-            print("active hunks in {}: {}"
-                 .format(filename.split("/")[-1], 
-                         registers[id(self.view)]['active']))
-            print("staged hunks in {}: {}"
-                 .format(filename.split("/")[-1],
-                         registers[id(self.view)]['staged']))
             paint_hunks(self.view, 'active')
             paint_hunks(self.view, 'staged')
-
+       
 
 class StageFile(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -240,7 +244,6 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
                 return
 
             diff = check_output(cli(self.view, diff_type), self.view)
-            print("diff: ", diff)
             new_diff = select_diff_portions(diff, selected)
             ndw = self.view.window().new_file()
             ndw.set_scratch(True)
@@ -270,13 +273,10 @@ class NewDiffCommand(sublime_plugin.TextCommand):
 
 class HunkListener(sublime_plugin.EventListener):
     def on_post_save(self, view):
-        if not registers.get(id(view)):
-          load_registers(view)
-        view.run_command("display_hunks")
+        hunk_setup(view)
 
     def on_load(self, view):
-        if not registers.get(id(view)):
-          load_registers(view)
+        hunk_setup(view)
 
     def on_activated(self, view):
-        view.run_command("display_hunks")
+        hunk_setup(view)
