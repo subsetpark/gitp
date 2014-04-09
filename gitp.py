@@ -237,7 +237,7 @@ class ViewHunksCommand(sublime_plugin.TextCommand):
             ndw.set_name(win_name)
             ndw.run_command('new_diff', {'nd': new_diff})
 
-class CommitHunksCommand(sublime_plugin.TextCommand):
+class CommitStagedChangesCommand(sublime_plugin.TextCommand):
     def commit_patch(self, str):
         p = popen(['git', 'commit', '--file=-'], self.view)
         print("git commit response: ",

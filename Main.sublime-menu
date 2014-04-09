@@ -18,8 +18,8 @@
                  {"command": "view_hunks"}
                 
             
-                ,{"id": "Commit Staged Hunks"},
-                 {"command": "commit_hunks"}
+                ,{"id": "Commit Staged Changes"},
+                 {"command": "commit_staged_changes"}
 
                 ,{"id": "Stage This File"},
                  {"command": "stage_file"}
