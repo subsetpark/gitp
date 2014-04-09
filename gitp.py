@@ -169,7 +169,7 @@ class StageFile(sublime_plugin.TextCommand):
             self.view.run_command('display_hunks')
 
 
-class EditDiffCommand(sublime_plugin.TextCommand):
+class ChooseHunksCommand(sublime_plugin.TextCommand):
     def crunch_diff(self, str):
         choices = [int(char) for char in str if char.isdigit()]
         stage_hunks(self.view, choices)

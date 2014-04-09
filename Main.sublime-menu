@@ -7,7 +7,7 @@
                 "children":
                     [
                          {"id": "Select Diffs to Stage"}
-                        ,{"command": "edit_diff"}
+                        ,{"command": "choose_hunks"}
                         
                        
                         ,{ "id": "Stage Selected Diffs"}
