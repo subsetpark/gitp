@@ -33,11 +33,16 @@ This allows you to selectively stage parts of a file for commit, rather than sta
 
 `gitp` represents changed hunks[^1] with number icons in the Sublime Text gutter. 
 
+
+### Staging a file
+
+- `ctrl-alt-a` : **stage file**. The current file is staged for commit.
+
 ### Staging changed hunks
 
 There are two ways to stage an individual hunk for commit in `gitp`: 
 
-- `ctrl-alt-x` : **edit diff**. The user is prompted for the digits of the changed hunks that they'd like to stage for commit.
+- `ctrl-alt-x` : **choose hunks**. The user is prompted for the digits of the changed hunks that they'd like to stage for commit.
 
 - `ctrl-alt-s` : **stage these hunks**. If one or more lines with changed hunk indicators on them (ST's multiple cursors are supported) are selected, this command will stage them all.
 
@@ -53,6 +58,6 @@ If one or more lines with hunk indicators are selected, this command will displa
 
 ### Committing hunks
 
-- `ctrl-alt-c` : **commit staged hunks**. The user is prompted for a commit message and all staged hunks are committed.
+- `ctrl-alt-c` : **commit staged changes**. The user is prompted for a commit message and all staged hunks are committed.
 
 [^1]: Hunks are discrete areas of changed text in a diff file. They are represented as one or more changed lines, surrounded by a little bit of context, and headed by a metadata line that starts with '@@'.
